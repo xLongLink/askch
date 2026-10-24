@@ -1,6 +1,6 @@
 [project]
-name = "swiss-api"
-version = "0.1.0"
+name = "askch"
+version = "0.0.0"
 description = "Swiss chatbot API"
 requires-python = ">=3.12"
 dependencies = [

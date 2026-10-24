@@ -14,17 +14,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.9.5"
-          python-version: "3.12"
-      - run: uv sync --locked
-        working-directory: api
-      - run: uv run --no-sync pytest
-        working-directory: api
+    uses: ./.github/workflows/test.yaml
 
   image:
     needs: test
@@ -75,11 +65,19 @@ jobs:
         with:
           path: images
           merge-multiple: true
-      - name: Load images and start stack
+      - name: Load image and start container
         run: |
           docker load --input images/swiss.tar.gz
-          cp api/.env.example api/.env
-          docker compose up --no-build --wait --wait-timeout 120
+          docker run -d --name swiss-smoke --env-file api/.env.example \
+            -p 127.0.0.1:8080:8000 "swiss:$IMAGE_TAG"
+          for _ in {1..60}; do
+            status=$(docker inspect --format '{{json .State.Health.Status}}' swiss-smoke)
+            if [[ "$status" == '"healthy"' ]]; then exit 0; fi
+            if [[ "$status" == '"unhealthy"' ]]; then exit 1; fi
+            sleep 2
+          done
+          echo "Container did not become healthy within 120 seconds"
+          exit 1
       - name: Check frontend and API
         run: |
           curl --fail --silent http://127.0.0.1:8080/ | grep -q 'Swiss Chat'
@@ -111,10 +109,10 @@ jobs:
           PY
       - name: Container logs
         if: failure()
-        run: docker compose logs
-      - name: Stop stack
+        run: docker logs swiss-smoke
+      - name: Remove container
         if: always()
-        run: docker compose down
+        run: docker rm --force swiss-smoke
 
   release:
     if: github.ref_type == 'tag'
@@ -130,9 +128,8 @@ jobs:
           merge-multiple: true
       - name: Prepare assets
         run: |
-          cp compose.yaml release/
           cd release
-          sha256sum ./*.tar.gz compose.yaml > SHA256SUMS
+          sha256sum ./*.tar.gz > SHA256SUMS
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

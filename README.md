@@ -1,7 +1,6 @@
 # AskCH
 
 An opensource chatbot 
-<br />
 
 <br />
 
