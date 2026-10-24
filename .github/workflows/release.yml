@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.5"
+          python-version: "3.12"
+      - run: uv sync --locked
+        working-directory: api
+      - run: uv run --no-sync pytest
+        working-directory: api
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Select image tag
+        id: tag
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_TYPE" == tag ]]; then
+            [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]] || { echo "Expected vMAJOR.MINOR.PATCH[-prerelease]"; exit 1; }
+            echo "value=$REF_NAME" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: app
+          platforms: linux/amd64
+          tags: swiss:${{ steps.tag.outputs.value }}
+          outputs: type=docker,dest=${{ runner.temp }}/swiss.tar
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+      - name: Compress image
+        env:
+          IMAGE: ${{ runner.temp }}/swiss.tar
+        run: gzip "$IMAGE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swiss
+          path: ${{ runner.temp }}/swiss.tar.gz
+          compression-level: 0
+          retention-days: 7
+
+  smoke:
+    needs: image
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || format('sha-{0}', github.sha) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: images
+          merge-multiple: true
+      - name: Load images and start stack
+        run: |
+          docker load --input images/swiss.tar.gz
+          cp api/.env.example api/.env
+          docker compose up --no-build --wait --wait-timeout 120
+      - name: Check frontend and API
+        run: |
+          curl --fail --silent http://127.0.0.1:8080/ | grep -q 'Swiss Chat'
+          curl --fail --silent http://127.0.0.1:8080/api/health | grep -q '"status":"ok"'
+          curl --fail --silent -H 'Accept: text/html' http://127.0.0.1:8080/client/route | grep -q 'Swiss Chat'
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' -H 'Accept: text/html' http://127.0.0.1:8080/api/missing)" = 404
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/_app/missing.js)" = 404
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            --data '{"messages":[{"id":"1","role":"user","parts":[{"type":"text","text":"Hello"}]}]}' \
+            http://127.0.0.1:8080/api/chat)
+          test "$status" = 503
+      - name: Check built frontend assets
+        run: |
+          python3 - <<'PY'
+          import re
+          import urllib.request
+
+          base = "http://127.0.0.1:8080"
+          request = urllib.request.Request(base + "/client/route", headers={"Accept": "text/html"})
+          with urllib.request.urlopen(request) as response:
+              html = response.read().decode()
+          assets = re.findall(r'["\x27](/_app/[^"\x27]+\.(?:js|css))["\x27]', html)
+          assert assets, "Missing absolute frontend asset URLs"
+          for asset in assets:
+              with urllib.request.urlopen(base + asset) as response:
+                  assert response.status == 200
+                  assert "text/html" not in response.headers["Content-Type"]
+          PY
+      - name: Container logs
+        if: failure()
+        run: docker compose logs
+      - name: Stop stack
+        if: always()
+        run: docker compose down
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Prepare assets
+        run: |
+          cp compose.yaml release/
+          cd release
+          sha256sum ./*.tar.gz compose.yaml > SHA256SUMS
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          args=()
+          if [[ "$TAG" == *-* ]]; then args+=(--prerelease); fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber
+          else
+            gh release create "$TAG" release/* --verify-tag --generate-notes "${args[@]}"
+          fi

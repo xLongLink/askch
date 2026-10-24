@@ -1,0 +1,247 @@
+```
+switzerland/
+│
+├── law/
+│   ├── federal/
+│   ├── cantonal/
+│   ├── municipal/
+│   ├── ordinances/
+│   ├── courts/
+│   ├── amendments/
+│   ├── legislation/
+│   ├── consultations/
+│   └── treaties/
+│
+├── statistics/
+│   ├── population/
+│   ├── demographics/
+│   ├── migration/
+│   ├── employment/
+│   ├── unemployment/
+│   ├── income/
+│   ├── housing/
+│   ├── education/
+│   ├── healthcare/
+│   ├── crime/
+│   ├── economy/
+│   └── history/
+│
+├── government/
+│   ├── federal/
+│   ├── cantonal/
+│   ├── municipal/
+│   ├── news/
+│   ├── releases/
+│   ├── parliament/
+│   ├── elections/
+│   ├── referendums/
+│   ├── proposals/
+│   ├── consultations/
+│   └── announcements/
+│
+├── property/
+│   ├── residential/
+│   │   ├── apartments/
+│   │   ├── houses/
+│   │   ├── rooms/
+│   │   └── studios/
+│   ├── commercial/
+│   │   ├── offices/
+│   │   ├── retail/
+│   │   ├── industrial/
+│   │   ├── warehouses/
+│   │   └── restaurants/
+│   ├── public/
+│   │   ├── buildings/
+│   │   ├── rentals/
+│   │   ├── land/
+│   │   └── sales/
+│   ├── cooperatives/
+│   ├── subsidies/
+│   ├── vacancies/
+│   ├── rentals/
+│   ├── sales/
+│   └── prices/
+│
+├── construction/
+│   ├── permits/
+│   ├── applications/
+│   ├── approvals/
+│   ├── developments/
+│   ├── residential/
+│   ├── commercial/
+│   ├── infrastructure/
+│   ├── demolitions/
+│   ├── renovations/
+│   ├── zoning/
+│   ├── planning/
+│   └── notices/
+│
+├── procurement/
+│   ├── tenders/
+│   ├── construction/
+│   ├── technology/
+│   ├── services/
+│   ├── equipment/
+│   ├── maintenance/
+│   ├── concessions/
+│   ├── contracts/
+│   ├── awards/
+│   └── deadlines/
+│
+├── business/
+│   ├── registry/
+│   ├── formations/
+│   ├── changes/
+│   ├── liquidations/
+│   ├── bankruptcies/
+│   ├── licenses/
+│   ├── notices/
+│   ├── industries/
+│   ├── startups/
+│   └── regulations/
+│
+├── economy/
+│   ├── taxes/
+│   │   ├── federal/
+│   │   ├── cantonal/
+│   │   ├── municipal/
+│   │   ├── corporate/
+│   │   └── amendments/
+│   ├── budgets/
+│   ├── spending/
+│   ├── inflation/
+│   ├── interest/
+│   ├── wages/
+│   ├── gdp/
+│   ├── forecasts/
+│   ├── debt/
+│   └── reports/
+│
+├── employment/
+│   ├── vacancies/
+│   ├── government/
+│   ├── municipal/
+│   ├── institutions/
+│   ├── apprenticeships/
+│   ├── internships/
+│   ├── unemployment/
+│   ├── labour/
+│   ├── agreements/
+│   └── salaries/
+│
+├── events/
+│   ├── municipal/
+│   ├── government/
+│   ├── meetings/
+│   ├── culture/
+│   ├── exhibitions/
+│   ├── museums/
+│   ├── concerts/
+│   ├── festivals/
+│   ├── conferences/
+│   ├── sports/
+│   ├── fairs/
+│   ├── markets/
+│   └── holidays/
+│
+├── transport/
+│   ├── public/
+│   │   ├── trains/
+│   │   ├── buses/
+│   │   ├── trams/
+│   │   ├── schedules/
+│   │   └── disruptions/
+│   ├── roads/
+│   │   ├── works/
+│   │   ├── closures/
+│   │   └── restrictions/
+│   ├── parking/
+│   ├── cycling/
+│   ├── airports/
+│   ├── projects/
+│   └── statistics/
+│
+├── environment/
+│   ├── weather/
+│   ├── climate/
+│   ├── air/
+│   ├── water/
+│   ├── pollution/
+│   ├── energy/
+│   ├── electricity/
+│   ├── renewables/
+│   ├── waste/
+│   ├── recycling/
+│   └── regulations/
+│
+├── healthcare/
+│   ├── hospitals/
+│   ├── clinics/
+│   ├── pharmacies/
+│   ├── facilities/
+│   ├── statistics/
+│   ├── insurance/
+│   ├── vaccinations/
+│   ├── regulations/
+│   └── diseases/
+│
+├── education/
+│   ├── schools/
+│   ├── universities/
+│   ├── vocational/
+│   ├── apprenticeships/
+│   ├── programs/
+│   ├── calendars/
+│   ├── scholarships/
+│   ├── grants/
+│   ├── research/
+│   └── statistics/
+│
+├── geography/
+│   ├── boundaries/
+│   ├── cantons/
+│   ├── municipalities/
+│   ├── addresses/
+│   ├── buildings/
+│   ├── land/
+│   ├── cadastre/
+│   ├── zoning/
+│   ├── coordinates/
+│   ├── topography/
+│   └── maps/
+│
+├── services/
+│   ├── residence/
+│   ├── permits/
+│   ├── citizenship/
+│   ├── registration/
+│   ├── identity/
+│   ├── driving/
+│   ├── vehicles/
+│   ├── procedures/
+│   ├── offices/
+│   ├── fees/
+│   ├── forms/
+│   └── deadlines/
+│
+├── subsidies/
+│   ├── housing/
+│   ├── business/
+│   ├── startups/
+│   ├── research/
+│   ├── education/
+│   ├── agriculture/
+│   ├── energy/
+│   ├── renovations/
+│   ├── assistance/
+│   ├── eligibility/
+│   └── deadlines/
+│
+└── safety/
+    ├── police/
+    ├── crime/
+    ├── recalls/
+    ├── consumers/
+    ├── enforcement/
+    └── notices/

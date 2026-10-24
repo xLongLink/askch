@@ -1,0 +1,47 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# JavaScript and Svelte
+node_modules/
+.pnpm-store/
+.svelte-kit/
+.vite/
+.output/
+.vercel/
+.netlify/
+.wrangler/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+coverage/
+
+# Build output and logs
+build/
+dist/
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+
+# Local workspace files
+TODO
