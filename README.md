@@ -1,12 +1,31 @@
-# AskCH
 
-AskCH is an open-source AI chatbot designed to help users explore, understand, and interact with Swiss data through natural language.
-The project aims to make information about Switzerland more accessible by allowing users to ask questions and receive clear, relevant, and easy-to-understand answers.
+<div align="center">
+
+
+<img src="banner.png" alt="AskCH banner" />
+
+<h3 >
+Make Swiss data accessible through natural language.
+</h3 >
+
+[![Release](https://img.shields.io/github/v/release/xLongLink/askch)](https://github.com/xLongLink/askch/releases/latest)
+[![Release workflow](https://github.com/xLongLink/askch/actions/workflows/release.yml/badge.svg)](https://github.com/xLongLink/askch/actions/workflows/release.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+
+</div>
+
+<br />
+
+## Features
+- TODO
 
 <br />
 
 ## How to Contribute
+- TODO
 
+<br />
 
 ### Develop the WebUI
 
@@ -38,6 +57,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
+<br />
 
 ---
 
