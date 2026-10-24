@@ -49,10 +49,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - name: Publish matching image
+        shell: bash
         env:
           IMAGE: ${{ steps.package.outputs.image }}
         run: |
-          source_id=$(docker image inspect --format '{{.Id}}' "swiss:$TAG")
+          source_config=$(tar -xOf release/swiss.tar.gz manifest.json | jq -r '.[0].Config')
+          source_id="sha256:$(tar -xOf release/swiss.tar.gz "$source_config" | sha256sum | cut -d ' ' -f 1)"
           if docker manifest inspect "$IMAGE:$TAG" > manifest.json 2>/dev/null; then
             test "$(jq -r '.config.digest' manifest.json)" = "$source_id" || { echo "Existing package tag differs from release image; refusing to overwrite"; exit 1; }
           else
@@ -60,7 +62,8 @@ jobs:
             docker push "$IMAGE:$TAG"
           fi
           docker pull "$IMAGE:$TAG"
-          test "$(docker image inspect --format '{{.Id}}' "$IMAGE:$TAG")" = "$source_id"
+          docker manifest inspect "$IMAGE:$TAG" > manifest.json
+          test "$(jq -r '.config.digest' manifest.json)" = "$source_id"
           echo "Published and verified $IMAGE:$TAG" >> "$GITHUB_STEP_SUMMARY"
       - name: Report package visibility
         run: |
