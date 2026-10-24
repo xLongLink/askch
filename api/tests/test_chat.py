@@ -1,6 +1,7 @@
 import json
 import httpx2
 import pytest
+from src.prompt import SYSTEM_PROMPT
 from src.settings import Settings
 from src.routes.chat import ERROR_MESSAGE
 from fastapi.testclient import TestClient
@@ -13,7 +14,7 @@ def message(text="Hello", role="user"):
 
 def settings(key="test-key"):
     """Provide deterministic provider settings without dotenv credentials."""
-    return Settings(_env_file=None, infomaniak_api_key=key)
+    return Settings(_env_file=None, INFOMANIAK_API_KEY=key)
 
 
 def events(response):
@@ -70,10 +71,11 @@ def test_streaming_chat(load_app):
         assert request.headers["authorization"] == "Bearer test-key"
         body = json.loads(request.content)
         assert body["model"] == "swiss-ai/Apertus-v1.5-70B"
-        assert body["messages"][0]["role"] == "system"
-        assert "Chart(" in body["messages"][0]["content"]
+        assert body["messages"][0] == {"role": "system", "content": SYSTEM_PROMPT}
         assert body["messages"][1:] == [{"role": "user", "content": "Hello"}]
         assert body["stream"] is True
+        assert body["max_tokens"] == 4096
+        assert request.extensions["timeout"] == {"connect": 10, "read": 60, "write": 60, "pool": 60}
         return httpx2.Response(
             200,
             text=(
@@ -91,14 +93,16 @@ def test_streaming_chat(load_app):
         chunks = events(response)
         assert chunks[0]["type"] == "start"
         assert chunks[0]["messageId"]
-        assert chunks[1:] == [
+        text_id = chunks[2]["id"]
+        assert chunks[1:-3] == [
             {"type": "start-step"},
-            {"type": "text-start", "id": "0"},
-            {"type": "text-delta", "id": "0", "delta": "root = Stack([])"},
-            {"type": "text-end", "id": "0"},
-            {"type": "finish-step"},
-            {"type": "finish", "finishReason": "stop"},
+            {"type": "text-start", "id": text_id},
+            {"type": "text-delta", "id": text_id, "delta": "root = Stack([])"},
+            {"type": "text-end", "id": text_id},
         ]
+        assert chunks[-3]["type"] == "message-metadata"
+        assert chunks[-2] == {"type": "finish-step"}
+        assert chunks[-1] == {"type": "finish", "finishReason": "stop"}
         assert response.text.endswith("data: [DONE]\n\n")
 
 
@@ -115,7 +119,14 @@ def test_followup_accepts_step_start_parts(assistant_text, load_app):
             expected.append({"role": "assistant", "content": assistant_text})
         expected.append({"role": "user", "content": "Tell me more"})
         assert json.loads(request.content)["messages"][1:] == expected
-        return httpx2.Response(200, text="data: [DONE]\n\n")
+        return httpx2.Response(
+            200,
+            text=(
+                'data: {"choices":[{"delta":{"content":"root = Stack([])"}}]}\n\n'
+                'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'
+                "data: [DONE]\n\n"
+            ),
+        )
 
     app = load_app(settings(), httpx2.MockTransport(upstream))
     with TestClient(app) as client:

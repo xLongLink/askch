@@ -7,9 +7,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env")
 
-    infomaniak_api_key: SecretStr = SecretStr("")
-    infomaniak_product_id: str = Field(default="112804", pattern=r"^\d+$")
-    infomaniak_model: str = "swiss-ai/Apertus-v1.5-70B"
+    INFOMANIAK_API_KEY: SecretStr = SecretStr("")
+    INFOMANIAK_PRODUCT_ID: str = Field(default="112804", pattern=r"^\d+$")
+    INFOMANIAK_MODEL: str = "swiss-ai/Apertus-v1.5-70B"
 
 
 settings = Settings()

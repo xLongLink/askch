@@ -24,8 +24,8 @@ async def lifespan(app: FastAPI):
     """Manage provider connections and MCP sessions for the application."""
     # Open and close provider connections and MCP together.
     client = httpx2.AsyncClient(
-        base_url=f"https://api.infomaniak.com/2/ai/{settings.infomaniak_product_id}/openai/v1/",
-        headers={"Authorization": f"Bearer {settings.infomaniak_api_key.get_secret_value()}"},
+        base_url=f"https://api.infomaniak.com/2/ai/{settings.INFOMANIAK_PRODUCT_ID}/openai/v1/",
+        headers={"Authorization": f"Bearer {settings.INFOMANIAK_API_KEY.get_secret_value()}"},
         timeout=httpx2.Timeout(60, connect=10),
     )
     async with client, server.session_manager.run():
@@ -35,7 +35,6 @@ async def lifespan(app: FastAPI):
 
 # Register application routes before the optional frontend.
 app = FastAPI(title="Swiss API", lifespan=lifespan)
-app.state.settings = settings
 app.mount("/api/mcp", mcp_app)
 app.include_router(router, prefix="/api")
 

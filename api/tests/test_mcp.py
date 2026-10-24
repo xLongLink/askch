@@ -10,7 +10,7 @@ def test_mounted_mcp(monkeypatch, load_app):
         return "Example website text"
 
     monkeypatch.setattr("src.mcp.server.fetch_website", fetch)
-    app = load_app(Settings(_env_file=None, infomaniak_api_key=""))
+    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
     with TestClient(app, base_url="http://localhost:8000") as client:
         headers = {"Accept": "application/json, text/event-stream"}
         response = client.post(
@@ -53,7 +53,7 @@ def test_mcp_tool_errors(monkeypatch, load_app):
         raise ValueError("Only public websites are allowed.")
 
     monkeypatch.setattr("src.mcp.server.fetch_website", fetch)
-    app = load_app(Settings(_env_file=None, infomaniak_api_key=""))
+    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
     with TestClient(app, base_url="http://localhost:8000") as client:
         response = client.post(
             "/api/mcp/",

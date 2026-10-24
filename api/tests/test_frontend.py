@@ -1,3 +1,4 @@
+import json
 import httpx2
 import pytest
 from src.settings import Settings
@@ -20,7 +21,7 @@ def frontend_dir(tmp_path):
 @pytest.fixture
 def client(frontend_dir, load_app):
     """Start the application with a bundled frontend and no provider key."""
-    settings = Settings(_env_file=None, infomaniak_api_key="")
+    settings = Settings(_env_file=None, INFOMANIAK_API_KEY="")
     app = load_app(settings)
     with TestClient(app, base_url="http://localhost:8000") as client:
         yield client
@@ -83,16 +84,23 @@ def test_chat_stream_with_frontend(frontend_dir, load_app):
 
     def upstream(request):
         return httpx2.Response(
-            200, text='data: {"choices":[{"delta":{"content":"Hello"}}]}\n\ndata: [DONE]\n\n', headers={"Content-Type": "text/event-stream"}
+            200,
+            text=(
+                'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'
+                'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'
+                "data: [DONE]\n\n"
+            ),
+            headers={"Content-Type": "text/event-stream"},
         )
 
-    settings = Settings(_env_file=None, infomaniak_api_key="test")
+    settings = Settings(_env_file=None, INFOMANIAK_API_KEY="test")
     app = load_app(settings, httpx2.MockTransport(upstream))
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [{"id": "1", "role": "user", "parts": [{"type": "text", "text": "Hi"}]}]})
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
-    assert '"delta": "Hello"' in response.text
+    chunks = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith("data: ") and line != "data: [DONE]"]
+    assert any(chunk.get("delta") == "Hello" for chunk in chunks)
     assert response.text.endswith("data: [DONE]\n\n")
 
 

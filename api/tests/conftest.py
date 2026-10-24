@@ -1,9 +1,9 @@
 import runpy
 import httpx2
 import pytest
-import functools
 from src import settings
 from pathlib import Path
+from src.routes import chat
 
 
 @pytest.fixture
@@ -18,13 +18,19 @@ def load_app(monkeypatch, tmp_path):
 
     def load(configuration, transport=None):
         # Load the real entry point with explicit test configuration.
+        monkeypatch.setattr(chat, "settings", configuration)
         with monkeypatch.context() as configuration_patch:
             configuration_patch.setattr(settings, "settings", configuration)
             namespace = runpy.run_path(str(entrypoint))
 
         # Intercept only the provider client when a test supplies a transport.
         if transport is not None:
-            monkeypatch.setattr(httpx2, "AsyncClient", functools.partial(client_type, transport=transport))
+
+            class ProviderClient(client_type):
+                def __init__(self, **kwargs):
+                    super().__init__(transport=transport, **kwargs)
+
+            monkeypatch.setattr(httpx2, "AsyncClient", ProviderClient)
         return namespace["app"]
 
     return load
