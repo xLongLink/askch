@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Chat } from '@ai-sdk/svelte';
   import { ArrowUp, Square } from '@lucide/svelte';
+  import { marked } from 'marked';
+  import sanitizeHtml from 'sanitize-html';
   import { Button } from '#lib/components/ui/button/index.js';
   import { Textarea } from '#lib/components/ui/textarea/index.js';
 
@@ -45,7 +47,7 @@
             {#if message.role === 'user'}
               <div class="flex justify-end"><div class="max-w-[85%] whitespace-pre-wrap break-words rounded-xl bg-muted px-4 py-3 text-[15px] leading-7">{text}</div></div>
             {:else if message.role === 'assistant' && text}
-              <div class="min-w-0 whitespace-pre-wrap break-words text-[15px] leading-7">{text}</div>
+              <div class="markdown min-w-0 break-words text-[15px] leading-7">{@html sanitizeHtml(marked.parse(text, { async: false }))}</div>
             {/if}
           {/each}
           {#if chat.status === 'submitted'}<p role="status" class="text-sm text-muted-foreground">Thinking…</p>{/if}
