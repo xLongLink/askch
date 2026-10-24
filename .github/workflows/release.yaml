@@ -13,7 +13,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validation:
+    uses: ./.github/workflows/test.yaml
+
   release:
+    needs: validation
     runs-on: ubuntu-latest
     permissions:
       contents: write

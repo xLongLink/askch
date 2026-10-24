@@ -1,4 +1,3 @@
-import fsspec
 import logging
 from uuid import uuid4
 from typing import Literal
@@ -41,11 +40,11 @@ class ChatTrace(BaseModel):
         self.events.append(TraceEvent(event=event, data=data))
 
     def save(self, directory: Path) -> None:
-        """Write a JSON file through fsspec without exposing storage errors to chat clients."""
+        """Write a local JSON file without exposing storage errors to chat clients."""
 
         # Keep persistence failures out of an otherwise valid streamed response.
         try:
-            with fsspec.open(str(directory / f"{self.id}.json"), "wt", encoding="utf-8", auto_mkdir=True) as file:
-                file.write(self.model_dump_json(indent=2))
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / f"{self.id}.json").write_text(self.model_dump_json(indent=2), encoding="utf-8")
         except OSError:
             logger.exception("Could not save chat trace %s", self.id)

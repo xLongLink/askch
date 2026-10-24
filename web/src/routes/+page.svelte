@@ -5,21 +5,11 @@
   import { Textarea } from '#lib/components/ui/textarea/index.js';
 
   const chat = new Chat({
-    // Trace transient tool events without adding them to conversation history.
-    onData: ({ type, data }) => {
-      if (type === 'data-tool-call') console.log('[Chat] Tool call:', data);
-      else if (type === 'data-tool-result') {
-        console.log('[Chat] Tool result:', data);
-        console.info('[Chat] Thinking: waiting for the model to continue.');
-      } else if (type === 'data-tool-error') console.error('[Chat] Tool error:', data);
+    onData: ({ type }) => {
+      if (type === 'data-tool-error') console.error('[Chat] Tool call failed.');
     },
-    onError: (error) => {
-      console.error('[Chat] Error:', error);
-    },
-
-    // Log the raw model text when each response finishes.
-    onFinish: ({ message }) => {
-      console.log('[Chat] Model output:', message.parts.filter((part) => part.type === 'text').map((part) => part.text).join(''));
+    onError: () => {
+      console.error('[Chat] Request failed.');
     },
   });
   let input = $state('');
@@ -29,16 +19,13 @@
   function send(text = input) {
     if (!text.trim() || busy) return;
 
-    // Record the user turn and mark the start of the model request.
-    console.log('[Chat] User message:', text.trim());
-    console.info('[Chat] Thinking: waiting for the model response.');
     input = '';
     chat.clearError();
     void chat.sendMessage({ text: text.trim() });
   }
 
   $effect(() => {
-    void JSON.stringify(chat.messages.at(-1));
+    void chat.messages.at(-1);
     messagesEnd?.scrollIntoView({ behavior: 'instant', block: 'end' });
   });
 </script>
