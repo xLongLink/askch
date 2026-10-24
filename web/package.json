@@ -17,7 +17,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "dependencies": {
-    "@ai-sdk/svelte": "^4.0.314",
+    "@ai-sdk/svelte": "^5.0.148",
     "@lucide/svelte": "^1.61.0",
     "ai": "^6.0.314",
     "cn": "^0.5.0",
