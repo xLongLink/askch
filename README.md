@@ -1,6 +1,8 @@
 # AskCH
 
-An opensource chatbot 
+AskCH is an open-source AI chatbot designed to help users explore, understand, and interact with Swiss data through natural language.
+
+The project aims to make information about Switzerland more accessible by allowing users to ask questions and receive clear, relevant, and easy-to-understand answers. Rather than navigating complex datasets or searching through multiple sources, users can explore Swiss information through a simple conversational interface.
 
 <br />
 

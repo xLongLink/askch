@@ -1,3 +1,5 @@
 {
-  "python-envs.uvPath": "/home/sau/.local/bin/uv"
+  "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
+  "python.analysis.extraPaths": ["${workspaceFolder}/api"],
+  "python.testing.cwd": "${workspaceFolder}/api"
 }
