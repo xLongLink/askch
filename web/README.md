@@ -5,28 +5,28 @@ A single-page Svelte 5 / SvelteKit chatbot built with Vite+, Tailwind CSS 4, and
 ## Run
 
 ```sh
-vp install
-vp dev
+npm ci
+npm run dev
 ```
 
 Run `make api` from the repository root in another terminal. The Python FastAPI backend owns all API endpoints and credentials in `api/.env`; see [its README](../api/README.md). Vite proxies `/api` to `http://127.0.0.1:8000`. There are no API routes or provider credentials in the web app. OpenUI renders the responses locally; no Thesys key is needed.
 
-Without a global Vite+ installation, use `pnpm install` and `pnpm dev`. Node 24 LTS is recommended.
+Use Node 24 LTS (24.11 or newer) with npm 11.19 or newer. No global Vite+ installation is required. `npm ci` installs the committed lockfile; use `npm install` when changing dependencies. The npm override keeps Vite dependencies on the Vite+ core alias, and the install-script policy disables the optional OpenUI postinstall script.
 
 ## Validate
 
 ```sh
-vp check
-vp run check
-vp build
+npm run lint
+npm run check
+npm run build
 ```
 
-`vp check` runs formatting and linting. `vp run check` runs Svelte's component-aware TypeScript checker. `vp run <task>` runs package scripts rather than Vite+'s built-in commands.
+`npm run lint` runs Vite+ formatting and lint checks. `npm run check` runs Svelte's component-aware TypeScript checker. The development and build scripts still use Vite+.
 
 ## Components
 
 ```sh
-pnpm dlx shadcn-svelte@latest add <component>
+npx shadcn-svelte@latest add <component>
 ```
 
 - `src/routes/+page.svelte`: chat interface, stop/retry, and new-chat reset.

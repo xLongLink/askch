@@ -10,12 +10,11 @@ COPY api/src ./src
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-editable
 
 FROM node:24-bookworm-slim AS web-build
-RUN npm install --global pnpm@12.15.0
 WORKDIR /app
-COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml web/.npmrc ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY web/package.json web/package-lock.json web/.npmrc ./
+RUN npm ci --ignore-scripts
 COPY web/ ./
-RUN pnpm exec svelte-kit sync && pnpm run check && pnpm run build
+RUN npm run check && npm run build
 
 FROM python:3.12-slim-bookworm AS app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 FRONTEND_DIR=/app/web
