@@ -1,8 +1,7 @@
+import httpx
+import socket
 import asyncio
 import ipaddress
-import socket
-
-import httpx
 from bs4 import BeautifulSoup
 
 MAX_BYTES = 2_000_000
@@ -11,10 +10,9 @@ MAX_REDIRECTS = 5
 
 
 async def public_address(host: str, port: int) -> str:
+    """Resolve a hostname only when every returned address is public."""
     try:
-        addresses = await asyncio.get_running_loop().getaddrinfo(
-            host, port, type=socket.SOCK_STREAM
-        )
+        addresses = await asyncio.get_running_loop().getaddrinfo(host, port, type=socket.SOCK_STREAM)
     except socket.gaierror as exc:
         raise ValueError("Website hostname could not be resolved.") from exc
     if not addresses:
@@ -27,17 +25,13 @@ async def public_address(host: str, port: int) -> str:
 
 
 def website_url(website: str) -> httpx.URL:
+    """Normalize a website URL and reject unsupported connection targets."""
     website = website.strip()
     if "://" not in website:
         website = f"https://{website}"
     try:
         url = httpx.URL(website)
-        if (
-            url.scheme not in {"http", "https"}
-            or not url.host
-            or url.userinfo
-            or url.port not in {None, 80, 443}
-        ):
+        if url.scheme not in {"http", "https"} or not url.host or url.userinfo or url.port not in {None, 80, 443}:
             raise ValueError("Provide a public HTTP or HTTPS website on port 80 or 443.")
         return url.copy_with(fragment=None)
     except httpx.InvalidURL as exc:
@@ -45,6 +39,7 @@ def website_url(website: str) -> httpx.URL:
 
 
 def readable_text(content: bytes, encoding: str, content_type: str) -> str:
+    """Extract bounded readable text from HTML or plain text."""
     decoded = content.decode(encoding, errors="replace")
     if content_type == "text/plain":
         text = decoded.strip()
@@ -61,6 +56,7 @@ def readable_text(content: bytes, encoding: str, content_type: str) -> str:
 
 
 async def fetch_website(website: str) -> str:
+    """Fetch readable website text with validated DNS, redirects, and limits."""
     try:
         async with asyncio.timeout(30):
             url = website_url(website)
@@ -72,10 +68,7 @@ async def fetch_website(website: str) -> str:
                 headers={"User-Agent": "SwissMCP/0.1", "Accept-Encoding": "identity"},
             ) as client:
                 for redirect in range(MAX_REDIRECTS + 1):
-                    address = await public_address(
-                        url.raw_host.decode("ascii"),
-                        url.port or (443 if url.scheme == "https" else 80),
-                    )
+                    address = await public_address(url.raw_host.decode("ascii"), url.port or (443 if url.scheme == "https" else 80))
                     # Pin DNS to the checked address, preserving TLS verification and Host.
                     async with client.stream(
                         "GET",
@@ -85,15 +78,11 @@ async def fetch_website(website: str) -> str:
                     ) as response:
                         if response.is_redirect:
                             if redirect == MAX_REDIRECTS or "location" not in response.headers:
-                                raise ValueError(
-                                    "Website redirected too many times or without a URL."
-                                )
+                                raise ValueError("Website redirected too many times or without a URL.")
                             url = website_url(str(url.join(response.headers["location"])))
                             continue
                         response.raise_for_status()
-                        content_type = (
-                            response.headers.get("content-type", "").split(";")[0].strip()
-                        )
+                        content_type = response.headers.get("content-type", "").split(";")[0].strip()
                         if content_type not in {"text/html", "application/xhtml+xml", "text/plain"}:
                             raise ValueError("Website must return HTML or plain text.")
                         content = bytearray()
@@ -101,9 +90,7 @@ async def fetch_website(website: str) -> str:
                             content.extend(chunk)
                             if len(content) > MAX_BYTES:
                                 raise ValueError("Website response exceeds the 2 MB limit.")
-                        return readable_text(
-                            bytes(content), response.encoding or "utf-8", content_type
-                        )
+                        return readable_text(bytes(content), response.encoding or "utf-8", content_type)
     except (TimeoutError, httpx.TimeoutException) as exc:
         raise ValueError("Website took too long to respond.") from exc
     except httpx.HTTPError as exc:

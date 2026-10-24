@@ -2,6 +2,7 @@
 !api/
 !api/pyproject.toml
 !api/uv.lock
+!api/main.py
 !api/src/
 !api/src/**
 !web/

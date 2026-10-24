@@ -1,22 +1,22 @@
 import json
-from uuid import uuid4
-
 import httpx
-from fastapi import APIRouter, Request
+from uuid import uuid4
+from fastapi import Request, APIRouter
+from src.prompt import SYSTEM_PROMPT
+from src.models.chat import ChatRequest
 from fastapi.responses import JSONResponse, StreamingResponse
-
-from ..models.chat import ChatRequest
-from ..prompt import SYSTEM_PROMPT
 
 router = APIRouter()
 ERROR_MESSAGE = "Unable to get a response. Check your API key and model, then try again."
 
 
 def event(kind: str, **data) -> str:
+    """Encode an AI SDK event as an SSE data frame."""
     return f"data: {json.dumps({'type': kind, **data})}\n\n"
 
 
 async def stream_response(response: httpx.Response):
+    """Translate provider chunks into AI SDK events and sanitize errors."""
     try:
         yield event("start", messageId=str(uuid4()))
         yield event("start-step")
@@ -60,11 +60,10 @@ async def stream_response(response: httpx.Response):
 
 @router.post("/chat")
 async def chat(body: ChatRequest, request: Request):
+    """Forward validated conversation messages and stream the provider response."""
     settings = request.app.state.settings
     if not settings.infomaniak_api_key.get_secret_value():
-        return JSONResponse(
-            {"error": "Add INFOMANIAK_API_KEY to api/.env to start chatting."}, status_code=503
-        )
+        return JSONResponse({"error": "Add INFOMANIAK_API_KEY to api/.env to start chatting."}, status_code=503)
     client = request.app.state.client
     upstream_request = client.build_request(
         "POST",
@@ -73,11 +72,7 @@ async def chat(body: ChatRequest, request: Request):
             "model": settings.infomaniak_model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                *[
-                    {"role": message.role, "content": message.text}
-                    for message in body.messages
-                    if message.text
-                ],
+                *[{"role": message.role, "content": message.text} for message in body.messages if message.text],
             ],
             "stream": True,
             "max_tokens": 4096,
@@ -93,9 +88,5 @@ async def chat(body: ChatRequest, request: Request):
     return StreamingResponse(
         stream_response(response),
         media_type="text/event-stream",
-        headers={
-            "x-vercel-ai-ui-message-stream": "v1",
-            "Cache-Control": "no-cache, no-transform",
-            "X-Accel-Buffering": "no",
-        },
+        headers={"x-vercel-ai-ui-message-stream": "v1", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Chat } from '@ai-sdk/svelte';
   import { Renderer, BuiltinActionType, type ActionEvent } from '@openuidev/svelte-lang';
-  import { ArrowUp, Square, SquarePen } from '@lucide/svelte';
+  import { ArrowUp, Square } from '@lucide/svelte';
   import { Button } from '#lib/components/ui/button/index.js';
   import { Textarea } from '#lib/components/ui/textarea/index.js';
   import { library } from '#lib/library.js';
@@ -56,17 +56,15 @@
       {#if chat.messages.length === 0}
         <span role="img" aria-label="Swiss flag" class="mb-6 block text-center text-4xl">🇨🇭</span>
         <h1 class="mb-8 text-center text-3xl font-medium tracking-tight sm:text-4xl">How can I help?</h1>
-      {:else}
-        <div class="mb-2 flex justify-end">
-          <Button variant="ghost" class="gap-2 text-muted-foreground" disabled={busy} onclick={() => { chat.messages = []; chat.clearError(); input = ''; }}><SquarePen class="size-4" />New chat</Button>
-        </div>
       {/if}
       {#if chat.error}<div role="alert" class="mb-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">{chat.error.message}<Button variant="ghost" size="sm" onclick={() => { chat.clearError(); void chat.regenerate(); }}>Try again</Button></div>{/if}
-      <form class="flex items-end gap-2 rounded-xl border p-2 focus-within:border-ring" onsubmit={(event) => { event.preventDefault(); send(); }}>
+      <form class="flex items-end gap-2 rounded-xl p-2" onsubmit={(event) => { event.preventDefault(); send(); }}>
         <Textarea aria-label="Message" placeholder="Message…" bind:value={input} rows={1} class="max-h-40 min-h-10 resize-none border-0 bg-transparent px-2 py-2 text-base shadow-none focus-visible:ring-0" onkeydown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(); } }} />
-        {#if busy}<Button size="icon-lg" variant="secondary" aria-label="Stop response" onclick={() => void chat.stop()}><Square class="size-3 fill-current" /></Button>{:else}<Button type="submit" size="icon-lg" disabled={!input.trim()} aria-label="Send message"><ArrowUp class="size-4" /></Button>{/if}
+        {#if busy}<Button size="icon-lg" class="h-auto w-10 self-stretch" variant="secondary" aria-label="Stop response" onclick={() => void chat.stop()}><Square class="size-3 fill-current" /></Button>{:else}<Button type="submit" size="icon-lg" class="h-auto w-10 self-stretch" disabled={!input.trim()} aria-label="Send message"><ArrowUp class="size-4" /></Button>{/if}
       </form>
-      <p class="mt-3 text-center text-xs text-muted-foreground">AI can make mistakes. Chats aren’t saved.</p>
     </div>
   </main>
+  <footer class="shrink-0 px-4 pb-4 text-center text-xs text-muted-foreground">
+    AI can make mistakes · <a href="https://github.com/xLongLink/askch" class="underline">Open Source</a> · Created by <a href="https://www.linkedin.com/company/longlink" class="underline">LongLink SAGL</a>
+  </footer>
 </div>

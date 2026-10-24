@@ -45,8 +45,10 @@ Requirements [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ```
 cd api
-uv sync && uv run uvicorn src.main:create_app --factory --reload
+uv sync && uv run python main.py
 ```
+
+Docker bundles the built frontend in `web/` beside `main.py`, where FastAPI serves it automatically. Without that directory, run the Vite development server separately; no frontend-path environment setting is needed.
 
 ### GitHub releases
 
