@@ -1,9 +1,9 @@
 import json
-import httpx
+import httpx2
 import pytest
+from src.settings import Settings
 from src.routes.chat import ERROR_MESSAGE
 from fastapi.testclient import TestClient
-from src.models.settings import Settings
 
 
 def message(text="Hello", role="user"):
@@ -57,7 +57,7 @@ def test_invalid_messages(body, load_app):
     def unexpected_request(request):
         pytest.fail("Invalid messages must not reach the provider")
 
-    app = load_app(settings(), httpx.MockTransport(unexpected_request))
+    app = load_app(settings(), httpx2.MockTransport(unexpected_request))
     with TestClient(app) as client:
         assert client.post("/api/chat", json=body).status_code == 422
 
@@ -74,7 +74,7 @@ def test_streaming_chat(load_app):
         assert "Chart(" in body["messages"][0]["content"]
         assert body["messages"][1:] == [{"role": "user", "content": "Hello"}]
         assert body["stream"] is True
-        return httpx.Response(
+        return httpx2.Response(
             200,
             text=(
                 'data: {"choices":[{"delta":{"content":"root = Stack([])"}}]}\n\n'
@@ -83,7 +83,7 @@ def test_streaming_chat(load_app):
             ),
         )
 
-    app = load_app(settings(), httpx.MockTransport(upstream))
+    app = load_app(settings(), httpx2.MockTransport(upstream))
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [message()]})
         assert response.status_code == 200
@@ -115,9 +115,9 @@ def test_followup_accepts_step_start_parts(assistant_text, load_app):
             expected.append({"role": "assistant", "content": assistant_text})
         expected.append({"role": "user", "content": "Tell me more"})
         assert json.loads(request.content)["messages"][1:] == expected
-        return httpx.Response(200, text="data: [DONE]\n\n")
+        return httpx2.Response(200, text="data: [DONE]\n\n")
 
-    app = load_app(settings(), httpx.MockTransport(upstream))
+    app = load_app(settings(), httpx2.MockTransport(upstream))
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [message(), assistant, message("Tell me more")]})
         assert response.status_code == 200
@@ -126,7 +126,7 @@ def test_followup_accepts_step_start_parts(assistant_text, load_app):
 
 def test_provider_error_is_sanitized(load_app):
     """Keep provider error bodies out of client responses."""
-    transport = httpx.MockTransport(lambda request: httpx.Response(401, text="secret-key"))
+    transport = httpx2.MockTransport(lambda request: httpx2.Response(401, text="secret-key"))
     app = load_app(settings(), transport)
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [message()]})
@@ -139,9 +139,9 @@ def test_connection_failure(load_app):
     """Return a sanitized error when the provider cannot be reached."""
 
     def upstream(request):
-        raise httpx.ConnectError("secret-key", request=request)
+        raise httpx2.ConnectError("secret-key", request=request)
 
-    app = load_app(settings(), httpx.MockTransport(upstream))
+    app = load_app(settings(), httpx2.MockTransport(upstream))
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [message()]})
         assert response.status_code == 502
@@ -151,7 +151,7 @@ def test_connection_failure(load_app):
 @pytest.mark.parametrize("stream", ["data: invalid\n\n", 'data: {"error":"secret-key"}\n\n', ""])
 def test_invalid_stream_is_sanitized(stream, load_app):
     """Convert malformed or incomplete streams into sanitized error events."""
-    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=stream))
+    transport = httpx2.MockTransport(lambda request: httpx2.Response(200, text=stream))
     app = load_app(settings(), transport)
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [message()]})

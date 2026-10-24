@@ -1,5 +1,5 @@
 import json
-import httpx
+import httpx2
 from uuid import uuid4
 from fastapi import Request, APIRouter
 from src.prompt import SYSTEM_PROMPT
@@ -15,7 +15,7 @@ def event(kind: str, **data) -> str:
     return f"data: {json.dumps({'type': kind, **data})}\n\n"
 
 
-async def stream_response(response: httpx.Response):
+async def stream_response(response: httpx2.Response):
     """Translate provider chunks into AI SDK events and sanitize errors."""
     try:
         yield event("start", messageId=str(uuid4()))
@@ -51,7 +51,7 @@ async def stream_response(response: httpx.Response):
         yield event("text-end", id="0")
         yield event("finish-step")
         yield event("finish", finishReason=finish_reason)
-    except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError):
+    except (httpx2.HTTPError, ValueError, KeyError, TypeError, AttributeError):
         yield event("error", errorText=ERROR_MESSAGE)
     finally:
         await response.aclose()
@@ -80,7 +80,7 @@ async def chat(body: ChatRequest, request: Request):
     )
     try:
         response = await client.send(upstream_request, stream=True)
-    except httpx.HTTPError:
+    except httpx2.HTTPError:
         return JSONResponse({"error": ERROR_MESSAGE}, status_code=502)
     if not response.is_success:
         await response.aclose()

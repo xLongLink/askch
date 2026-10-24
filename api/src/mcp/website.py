@@ -1,4 +1,4 @@
-import httpx
+import httpx2
 import socket
 import asyncio
 import ipaddress
@@ -24,17 +24,17 @@ async def public_address(host: str, port: int) -> str:
     return addresses[0][4][0]
 
 
-def website_url(website: str) -> httpx.URL:
+def website_url(website: str) -> httpx2.URL:
     """Normalize a website URL and reject unsupported connection targets."""
     website = website.strip()
     if "://" not in website:
         website = f"https://{website}"
     try:
-        url = httpx.URL(website)
+        url = httpx2.URL(website)
         if url.scheme not in {"http", "https"} or not url.host or url.userinfo or url.port not in {None, 80, 443}:
             raise ValueError("Provide a public HTTP or HTTPS website on port 80 or 443.")
         return url.copy_with(fragment=None)
-    except httpx.InvalidURL as exc:
+    except httpx2.InvalidURL as exc:
         raise ValueError("Invalid website URL.") from exc
 
 
@@ -60,11 +60,11 @@ async def fetch_website(website: str) -> str:
     try:
         async with asyncio.timeout(30):
             url = website_url(website)
-            async with httpx.AsyncClient(
+            async with httpx2.AsyncClient(
                 timeout=10,
                 follow_redirects=False,
                 trust_env=False,
-                limits=httpx.Limits(max_keepalive_connections=0),
+                limits=httpx2.Limits(max_keepalive_connections=0),
                 headers={"User-Agent": "SwissMCP/0.1", "Accept-Encoding": "identity"},
             ) as client:
                 for redirect in range(MAX_REDIRECTS + 1):
@@ -91,7 +91,7 @@ async def fetch_website(website: str) -> str:
                             if len(content) > MAX_BYTES:
                                 raise ValueError("Website response exceeds the 2 MB limit.")
                         return readable_text(bytes(content), response.encoding or "utf-8", content_type)
-    except (TimeoutError, httpx.TimeoutException) as exc:
+    except (TimeoutError, httpx2.TimeoutException) as exc:
         raise ValueError("Website took too long to respond.") from exc
-    except httpx.HTTPError as exc:
+    except httpx2.HTTPError as exc:
         raise ValueError("Website could not be fetched.") from exc

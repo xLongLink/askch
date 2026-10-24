@@ -1,4 +1,4 @@
-import httpx
+import httpx2
 import pytest
 import asyncio
 from src.mcp import website
@@ -35,12 +35,12 @@ def test_schemeless_url():
 @pytest.fixture
 def mock_fetch(monkeypatch):
     """Provide deterministic DNS and an intercepted HTTP transport."""
-    original_client = httpx.AsyncClient
+    original_client = httpx2.AsyncClient
     monkeypatch.setattr(website, "public_address", AsyncMock(return_value="93.184.216.34"))
 
     def configure(handler):
         monkeypatch.setattr(
-            website.httpx, "AsyncClient", lambda **kwargs: original_client(transport=httpx.MockTransport(handler), **kwargs)
+            website.httpx2, "AsyncClient", lambda **kwargs: original_client(transport=httpx2.MockTransport(handler), **kwargs)
         )
 
     return configure
@@ -54,7 +54,7 @@ async def test_fetches_text_and_pins_dns(mock_fetch):
         assert request.url.host == "93.184.216.34"
         assert request.headers["Host"] == "example.com"
         assert request.extensions["sni_hostname"] == "example.com"
-        return httpx.Response(
+        return httpx2.Response(
             200,
             headers={"Content-Type": "text/html"},
             text=(
@@ -71,7 +71,7 @@ async def test_fetches_text_and_pins_dns(mock_fetch):
 @pytest.mark.anyio
 async def test_redirect_rechecks_dns(mock_fetch):
     """Validate each redirect destination before opening a connection."""
-    mock_fetch(lambda request: httpx.Response(302, headers={"Location": "http://localhost"}))
+    mock_fetch(lambda request: httpx2.Response(302, headers={"Location": "http://localhost"}))
 
     async def resolve(host, port):
         if host == "localhost":
@@ -87,10 +87,10 @@ async def test_redirect_rechecks_dns(mock_fetch):
 @pytest.mark.parametrize(
     ("response", "error"),
     [
-        (httpx.Response(200, headers={"Content-Type": "application/pdf"}, content=b"pdf"), "HTML or plain text"),
-        (httpx.Response(200, headers={"Content-Type": "text/plain"}, text="x" * (website.MAX_BYTES + 1)), "2 MB limit"),
-        (httpx.Response(404), "could not be fetched"),
-        (httpx.Response(302, headers={"Location": "/loop"}), "redirected too many times"),
+        (httpx2.Response(200, headers={"Content-Type": "application/pdf"}, content=b"pdf"), "HTML or plain text"),
+        (httpx2.Response(200, headers={"Content-Type": "text/plain"}, text="x" * (website.MAX_BYTES + 1)), "2 MB limit"),
+        (httpx2.Response(404), "could not be fetched"),
+        (httpx2.Response(302, headers={"Location": "/loop"}), "redirected too many times"),
     ],
 )
 async def test_fetch_failures(mock_fetch, response, error):
@@ -105,7 +105,7 @@ async def test_timeout(mock_fetch):
     """Convert provider timeouts into a readable website error."""
 
     def upstream(request):
-        raise httpx.ReadTimeout("timeout", request=request)
+        raise httpx2.ReadTimeout("timeout", request=request)
 
     mock_fetch(upstream)
     with pytest.raises(ValueError, match="too long"):

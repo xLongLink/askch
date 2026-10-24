@@ -1,7 +1,7 @@
-import httpx
+import httpx2
 import pytest
+from src.settings import Settings
 from fastapi.testclient import TestClient
-from src.models.settings import Settings
 
 
 @pytest.fixture
@@ -82,12 +82,12 @@ def test_chat_stream_with_frontend(frontend_dir, load_app):
     """Stream chat responses while frontend serving is enabled."""
 
     def upstream(request):
-        return httpx.Response(
+        return httpx2.Response(
             200, text='data: {"choices":[{"delta":{"content":"Hello"}}]}\n\ndata: [DONE]\n\n', headers={"Content-Type": "text/event-stream"}
         )
 
     settings = Settings(_env_file=None, infomaniak_api_key="test")
-    app = load_app(settings, httpx.MockTransport(upstream))
+    app = load_app(settings, httpx2.MockTransport(upstream))
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"messages": [{"id": "1", "role": "user", "parts": [{"type": "text", "text": "Hi"}]}]})
     assert response.status_code == 200

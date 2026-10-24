@@ -10,3 +10,6 @@ class Settings(BaseSettings):
     infomaniak_api_key: SecretStr = SecretStr("")
     infomaniak_product_id: str = Field(default="112804", pattern=r"^\d+$")
     infomaniak_model: str = "swiss-ai/Apertus-v1.5-70B"
+
+
+settings = Settings()

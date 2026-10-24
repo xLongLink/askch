@@ -1,5 +1,5 @@
+from src.settings import Settings
 from fastapi.testclient import TestClient
-from src.models.settings import Settings
 
 
 def test_mounted_mcp(monkeypatch, load_app):
