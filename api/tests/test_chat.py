@@ -1,7 +1,6 @@
 import json
 import httpx2
 import pytest
-from src.prompt import SYSTEM_PROMPT
 from src.settings import Settings
 from src.routes.chat import ERROR_MESSAGE
 from fastapi.testclient import TestClient
@@ -71,7 +70,7 @@ def test_streaming_chat(load_app):
         assert request.headers["authorization"] == "Bearer test-key"
         body = json.loads(request.content)
         assert body["model"] == "swiss-ai/Apertus-v1.5-70B"
-        assert body["messages"][0] == {"role": "system", "content": SYSTEM_PROMPT}
+        assert body["messages"][0] == {"role": "system", "content": settings().SYSTEM_PROMPT}
         assert body["messages"][1:] == [{"role": "user", "content": "Hello"}]
         assert body["stream"] is True
         assert body["max_tokens"] == 4096
@@ -79,7 +78,7 @@ def test_streaming_chat(load_app):
         return httpx2.Response(
             200,
             text=(
-                'data: {"choices":[{"delta":{"content":"root = Stack([])"}}]}\n\n'
+                'data: {"choices":[{"delta":{"content":"Hello!"}}]}\n\n'
                 'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'
                 "data: [DONE]\n\n"
             ),
@@ -97,7 +96,7 @@ def test_streaming_chat(load_app):
         assert chunks[1:-3] == [
             {"type": "start-step"},
             {"type": "text-start", "id": text_id},
-            {"type": "text-delta", "id": text_id, "delta": "root = Stack([])"},
+            {"type": "text-delta", "id": text_id, "delta": "Hello!"},
             {"type": "text-end", "id": text_id},
         ]
         assert chunks[-3]["type"] == "message-metadata"
@@ -106,7 +105,7 @@ def test_streaming_chat(load_app):
         assert response.text.endswith("data: [DONE]\n\n")
 
 
-@pytest.mark.parametrize("assistant_text", ["root = Stack([])", ""])
+@pytest.mark.parametrize("assistant_text", ["Hello!", ""])
 def test_followup_accepts_step_start_parts(assistant_text, load_app):
     """Accept step-start markers when sending conversation follow-ups."""
     assistant = {"id": "assistant-1", "role": "assistant", "parts": [{"type": "step-start"}]}
@@ -122,7 +121,7 @@ def test_followup_accepts_step_start_parts(assistant_text, load_app):
         return httpx2.Response(
             200,
             text=(
-                'data: {"choices":[{"delta":{"content":"root = Stack([])"}}]}\n\n'
+                'data: {"choices":[{"delta":{"content":"Hello!"}}]}\n\n'
                 'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'
                 "data: [DONE]\n\n"
             ),

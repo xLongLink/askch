@@ -19,11 +19,8 @@
   "dependencies": {
     "@ai-sdk/svelte": "^4.0.314",
     "@lucide/svelte": "^1.61.0",
-    "@openuidev/svelte-lang": "0.4.2",
     "ai": "^6.0.314",
-    "chart.js": "^4.6.1",
-    "cn": "^0.5.0",
-    "zod": "^4.6.7"
+    "cn": "^0.5.0"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^4.0.0",
@@ -44,8 +41,5 @@
   "engines": {
     "node": ">=24.11.0 <25",
     "npm": ">=11.19.0"
-  },
-  "allowScripts": {
-    "@openuidev/lang-core": false
   }
 }

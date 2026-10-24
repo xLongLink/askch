@@ -17,4 +17,5 @@
 **/.env
 **/.env.*
 **/*.log
+**/.chats
 **/.DS_Store

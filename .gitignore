@@ -33,6 +33,7 @@ coverage/
 build/
 dist/
 *.log
+.chats/
 
 # OS and editor files
 .DS_Store

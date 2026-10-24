@@ -17,6 +17,7 @@ def load_app(monkeypatch, tmp_path):
     entrypoint.write_text((Path(__file__).parents[1] / "main.py").read_text())
 
     def load(configuration, transport=None):
+        configuration = configuration.model_copy(update={"CHATS_DIR": tmp_path / ".chats"})
         # Load the real entry point with explicit test configuration.
         monkeypatch.setattr(chat, "settings", configuration)
         with monkeypatch.context() as configuration_patch:

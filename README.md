@@ -18,7 +18,12 @@ Make Swiss data accessible through natural language.
 <br />
 
 ## Features
-- TODO
+
+- [Aprtus 1.5](https://www.apertus-ai.org/articles/2026-07-apertus-1-5/)
+- MCP server that connect to swiss services
+
+TODO:
+-  SDK
 
 <br />
 

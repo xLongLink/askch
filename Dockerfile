@@ -10,7 +10,7 @@ COPY api/src ./src
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-editable
 
 FROM node:24-bookworm-slim AS web-build
-WORKDIR /app
+WORKDIR /app/web
 COPY web/package.json web/package-lock.json web/.npmrc ./
 RUN npm ci --ignore-scripts
 COPY web/ ./
@@ -22,7 +22,7 @@ WORKDIR /app
 RUN useradd --uid 10001 --no-create-home app
 COPY --from=api-build /app/.venv ./.venv
 COPY api/main.py ./main.py
-COPY --from=web-build /app/build ./web
+COPY --from=web-build /app/web/build ./web
 USER 10001
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]

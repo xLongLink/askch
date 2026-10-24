@@ -2,14 +2,8 @@ from src.settings import Settings
 from fastapi.testclient import TestClient
 
 
-def test_mounted_mcp(monkeypatch, load_app):
-    """Initialize MCP, list its tool, and fetch website text through it."""
-
-    async def fetch(website):
-        assert website == "https://example.com"
-        return "Example website text"
-
-    monkeypatch.setattr("src.mcp.server.fetch_website", fetch)
+def test_mounted_mcp(load_app):
+    """Expose weather forecasts through MCP without allowing arbitrary website fetching."""
     app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
     with TestClient(app, base_url="http://localhost:8000") as client:
         headers = {"Accept": "application/json, text/event-stream"}
@@ -29,8 +23,8 @@ def test_mounted_mcp(monkeypatch, load_app):
         headers["Mcp-Protocol-Version"] = result["protocolVersion"]
         response = client.post("/api/mcp/", headers=headers, json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = response.json()["result"]["tools"]
-        assert [tool["name"] for tool in tools] == ["search"]
-        assert tools[0]["inputSchema"]["required"] == ["website"]
+        assert [tool["name"] for tool in tools] == ["meteo"]
+        assert tools[0]["inputSchema"]["required"] == ["location"]
         response = client.post(
             "/api/mcp/",
             headers=headers,
@@ -42,29 +36,24 @@ def test_mounted_mcp(monkeypatch, load_app):
             },
         )
         result = response.json()["result"]
-        assert result["content"][0]["text"] == "Example website text"
-        assert not result.get("isError", False)
+        assert result["isError"] is True
+        assert "Unknown tool" in result["content"][0]["text"]
 
 
 def test_mcp_tool_errors(monkeypatch, load_app):
-    """Report website validation failures as MCP tool errors."""
+    """Report forecast lookup failures as MCP tool errors."""
 
-    async def fetch(website):
-        raise ValueError("Only public websites are allowed.")
+    async def fetch(location, parameter, hours):
+        raise ValueError("Forecast unavailable.")
 
-    monkeypatch.setattr("src.mcp.server.fetch_website", fetch)
+    monkeypatch.setattr("src.mcp.server.fetch_meteo", fetch)
     app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
     with TestClient(app, base_url="http://localhost:8000") as client:
         response = client.post(
             "/api/mcp/",
             headers={"Accept": "application/json, text/event-stream", "Mcp-Protocol-Version": "2025-11-25"},
-            json={
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "tools/call",
-                "params": {"name": "search", "arguments": {"website": "http://localhost"}},
-            },
+            json={"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "meteo", "arguments": {"location": "3011"}}},
         )
         result = response.json()["result"]
         assert result["isError"] is True
-        assert "Only public websites are allowed." in result["content"][0]["text"]
+        assert "Forecast unavailable." in result["content"][0]["text"]

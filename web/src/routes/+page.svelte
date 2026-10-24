@@ -1,25 +1,40 @@
 <script lang="ts">
   import { Chat } from '@ai-sdk/svelte';
-  import { Renderer, BuiltinActionType, type ActionEvent } from '@openuidev/svelte-lang';
   import { ArrowUp, Square } from '@lucide/svelte';
   import { Button } from '#lib/components/ui/button/index.js';
   import { Textarea } from '#lib/components/ui/textarea/index.js';
-  import { library } from '#lib/library.js';
 
-  const chat = new Chat({});
+  const chat = new Chat({
+    // Trace transient tool events without adding them to conversation history.
+    onData: ({ type, data }) => {
+      if (type === 'data-tool-call') console.log('[Chat] Tool call:', data);
+      else if (type === 'data-tool-result') {
+        console.log('[Chat] Tool result:', data);
+        console.info('[Chat] Thinking: waiting for the model to continue.');
+      } else if (type === 'data-tool-error') console.error('[Chat] Tool error:', data);
+    },
+    onError: (error) => {
+      console.error('[Chat] Error:', error);
+    },
+
+    // Log the raw model text when each response finishes.
+    onFinish: ({ message }) => {
+      console.log('[Chat] Model output:', message.parts.filter((part) => part.type === 'text').map((part) => part.text).join(''));
+    },
+  });
   let input = $state('');
   let messagesEnd = $state<HTMLDivElement>();
   const busy = $derived(chat.status === 'submitted' || chat.status === 'streaming');
 
   function send(text = input) {
     if (!text.trim() || busy) return;
+
+    // Record the user turn and mark the start of the model request.
+    console.log('[Chat] User message:', text.trim());
+    console.info('[Chat] Thinking: waiting for the model response.');
     input = '';
     chat.clearError();
     void chat.sendMessage({ text: text.trim() });
-  }
-
-  function onAction(event: ActionEvent) {
-    if (event.type === BuiltinActionType.ContinueConversation && event.humanFriendlyMessage) send(event.humanFriendlyMessage);
   }
 
   $effect(() => {
@@ -30,7 +45,7 @@
 
 <svelte:head>
   <title>Swiss Chat</title>
-  <meta name="description" content="A simple, private-session chatbot powered by OpenUI." />
+  <meta name="description" content="Explore Swiss data through natural language." />
 </svelte:head>
 
 <div class="flex h-dvh flex-col">
@@ -43,7 +58,7 @@
             {#if message.role === 'user'}
               <div class="flex justify-end"><div class="max-w-[85%] whitespace-pre-wrap break-words rounded-xl bg-muted px-4 py-3 text-[15px] leading-7">{text}</div></div>
             {:else if message.role === 'assistant' && text}
-              <div class="min-w-0"><Renderer response={text} {library} isStreaming={busy && message.id === chat.messages.at(-1)?.id} {onAction} /></div>
+              <div class="min-w-0 whitespace-pre-wrap break-words text-[15px] leading-7">{text}</div>
             {/if}
           {/each}
           {#if chat.status === 'submitted'}<p role="status" class="text-sm text-muted-foreground">Thinking…</p>{/if}
@@ -58,7 +73,7 @@
         <h1 class="mb-8 text-center text-3xl font-medium tracking-tight sm:text-4xl">How can I help?</h1>
       {/if}
       {#if chat.error}<div role="alert" class="mb-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">{chat.error.message}<Button variant="ghost" size="sm" onclick={() => { chat.clearError(); void chat.regenerate(); }}>Try again</Button></div>{/if}
-      <form class="flex items-end gap-2 rounded-xl p-2" onsubmit={(event) => { event.preventDefault(); send(); }}>
+      <form class="flex items-end gap-2 rounded-xl bg-neutral-200 p-2" onsubmit={(event) => { event.preventDefault(); send(); }}>
         <Textarea aria-label="Message" placeholder="Message…" bind:value={input} rows={1} class="max-h-40 min-h-10 resize-none border-0 bg-transparent px-2 py-2 text-base shadow-none focus-visible:ring-0" onkeydown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(); } }} />
         {#if busy}<Button size="icon-lg" class="h-auto w-10 self-stretch" variant="secondary" aria-label="Stop response" onclick={() => void chat.stop()}><Square class="size-3 fill-current" /></Button>{:else}<Button type="submit" size="icon-lg" class="h-auto w-10 self-stretch" disabled={!input.trim()} aria-label="Send message"><ArrowUp class="size-4" /></Button>{/if}
       </form>

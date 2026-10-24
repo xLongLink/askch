@@ -3,7 +3,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, Request, APIRouter, HTTPException
 from pathlib import Path
 from contextlib import asynccontextmanager
-from src.routes import router
+from src.routes import health, router
 from src.settings import settings
 from src.mcp.server import server
 
@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Swiss API", lifespan=lifespan)
 app.mount("/api/mcp", mcp_app)
 app.include_router(router, prefix="/api")
+app.include_router(health.router, include_in_schema=False)
 
 # Serve the bundled frontend when present, leaving API-only development available.
 frontend_path = Path(__file__).resolve().parent / "web"
