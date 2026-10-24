@@ -1,9 +1,7 @@
 # AskCH
 
 An opensource chatbot 
-
 <br />
-
 
 <br />
 
@@ -29,7 +27,7 @@ cd api
 uv sync && uv run uvicorn src.main:create_app --factory --reload
 ```
 
-## GitHub releases
+### GitHub releases
 
 Push a version tag after committing the project and these files:
 
