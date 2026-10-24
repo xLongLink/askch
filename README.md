@@ -10,7 +10,7 @@ Make Swiss data accessible through natural language.
 
 [![Release](https://img.shields.io/github/v/release/xLongLink/askch)](https://github.com/xLongLink/askch/releases/latest)
 [![Release workflow](https://github.com/xLongLink/askch/actions/workflows/release.yml/badge.svg)](https://github.com/xLongLink/askch/actions/workflows/release.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 
 </div>
