@@ -63,8 +63,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: swiss
           path: images
-          merge-multiple: true
       - name: Load image and start container
         run: |
           docker load --input images/swiss.tar.gz
@@ -124,8 +124,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: swiss
           path: release
-          merge-multiple: true
       - name: Prepare assets
         run: |
           cd release
