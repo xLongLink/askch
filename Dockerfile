@@ -5,6 +5,7 @@ WORKDIR /app/web
 COPY web/package.json web/package-lock.json web/.npmrc ./
 RUN npm ci --ignore-scripts
 COPY web/ ./
+ARG VITE_APP_VERSION
 RUN npm run check && npm run build
 
 FROM python:3.12-slim-bookworm AS api-build

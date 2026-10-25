@@ -8,6 +8,7 @@ import { ArrowUp, CircleAlert, Square } from "lucide-react";
 import { AssistantMessage } from "@/components/assistant";
 import { useDictation } from "@/lib/dictation";
 import { VoiceInput } from "@/components/ui/voice-input";
+import { version } from "../package.json";
 
 export function App() {
     // Fix the initial UI language for the lifetime of this conversation.
@@ -243,7 +244,8 @@ export function App() {
                 · Created by <a href="https://www.linkedin.com/company/longlink">LongLink</a> in{" "}
                 <span role="img" aria-label="Switzerland">
                     🇨🇭
-                </span>
+                </span>{" "}
+                · {import.meta.env.VITE_APP_VERSION || `v${version}`}
             </footer>
         </section>
     );
