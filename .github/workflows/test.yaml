@@ -26,6 +26,8 @@ jobs:
       - run: uv run --no-sync ruff check .
       - run: uv run --no-sync ruff format --check .
       - run: uv run --no-sync pytest
+        env:
+          INFOMANIAK_API_KEY: test-key
 
   web:
     runs-on: ubuntu-latest

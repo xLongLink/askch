@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
+    "paths": { "@/*": ["./src/*"] },
     "types": ["vite-plus/client"]
   },
   "include": ["src", "vite.config.ts"]

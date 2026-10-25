@@ -26,8 +26,8 @@
       "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
     },
     "Chart": {
-      "signature": "Chart(title: string, type: \"line\" | \"bar\", xLabel: string, yLabel: string, labels: string[], series: {name: string, values: number[]}[])",
-      "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data)."
+      "signature": "Chart(title: string, type: \"line\" | \"bar\", xLabel: string, yLabel: string, labels: string[], series: {name: string, values: number[]}[] | {name: string, values: number[]})",
+      "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and an array of 1–4 named series (a single series object is also accepted). Use null for missing data; omitted trailing values appear as gaps."
     },
     "Map": {
       "signature": "Map(title: string, unit: string, cantons: {code: \"AG\" | \"AI\" | \"AR\" | \"BE\" | \"BL\" | \"BS\" | \"FR\" | \"GE\" | \"GL\" | \"GR\" | \"JU\" | \"LU\" | \"NE\" | \"NW\" | \"OW\" | \"SG\" | \"SH\" | \"SO\" | \"SZ\" | \"TG\" | \"TI\" | \"UR\" | \"VD\" | \"VS\" | \"ZG\" | \"ZH\", label: string, value?: number}[], markers: {label: string, longitude: number, latitude: number}[])",
@@ -239,35 +239,65 @@
             }
           },
           "series": {
-            "minItems": 1,
-            "maxItems": 4,
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 100
-                },
-                "values": {
-                  "minItems": 1,
-                  "maxItems": 100,
-                  "type": "array",
-                  "items": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
-                  }
+            "anyOf": [
+              {
+                "minItems": 1,
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "values": {
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "values"
+                  ],
+                  "additionalProperties": false
                 }
               },
-              "required": [
-                "name",
-                "values"
-              ],
-              "additionalProperties": false
-            }
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "values": {
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "values"
+                ],
+                "additionalProperties": false
+              }
+            ]
           }
         },
         "required": [
@@ -279,7 +309,7 @@
           "series"
         ],
         "additionalProperties": false,
-        "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data)."
+        "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and an array of 1–4 named series (a single series object is also accepted). Use null for missing data; omitted trailing values appear as gaps."
       },
       "Map": {
         "type": "object",

@@ -1,7 +1,4 @@
 import { defineComponent, useIsStreaming } from "@openuidev/react-lang";
-import { Heading } from "@astryxdesign/core/Heading";
-import { HStack } from "@astryxdesign/core/HStack";
-import { Text } from "@astryxdesign/core/Text";
 import { Annotation, ComposableMap, Geographies, Geography, Marker } from "react-simple-maps/core";
 import { z } from "zod/v4";
 import cantons from "./cantons.json";
@@ -91,7 +88,7 @@ export const map = defineComponent({
 
     return (
       <figure className="m-0 min-w-0 w-full">
-        <Heading level={3}>{data.title}</Heading>
+        <h3 className="text-base font-semibold tracking-tight">{data.title}</h3>
         <ComposableMap
           className="block h-auto w-full"
           width={800}
@@ -124,10 +121,10 @@ export const map = defineComponent({
                     geography={geography}
                     fill={
                       intensity === null
-                        ? "color-mix(in srgb, var(--color-text-secondary) 30%, var(--color-background-surface))"
-                        : `hsl(210 65% ${95 - intensity * 60}%)`
+                        ? "var(--muted)"
+                        : `color-mix(in oklch, var(--chart-2) ${intensity * 100}%, var(--background))`
                     }
-                    stroke="var(--color-text-secondary)"
+                    stroke="var(--muted-foreground)"
                     strokeWidth={1}
                   >
                     <title>
@@ -140,7 +137,7 @@ export const map = defineComponent({
           </Geographies>
           {data.markers.map((marker, index) => (
             <Marker key={index} coordinates={[marker.longitude, marker.latitude]}>
-              <circle r={5} fill="#b00000" stroke="#fff" strokeWidth={1.5} />
+              <circle r={5} fill="var(--primary)" stroke="var(--background)" strokeWidth={1.5} />
               <title>{marker.label}</title>
             </Marker>
           ))}
@@ -150,13 +147,13 @@ export const map = defineComponent({
               subject={[marker.longitude, marker.latitude]}
               dx={marker.longitude > 8.25 ? -18 : 18}
               dy={index % 2 === 0 ? -18 : 22}
-              connectorProps={{ stroke: "#525252", strokeWidth: 1 }}
+              connectorProps={{ stroke: "var(--muted-foreground)", strokeWidth: 1 }}
             >
               <text
                 textAnchor={marker.longitude > 8.25 ? "end" : "start"}
                 fontSize={13}
-                fill="#171717"
-                stroke="#fff"
+                fill="var(--foreground)"
+                stroke="var(--background)"
                 strokeWidth={3}
                 paintOrder="stroke"
               >
@@ -166,25 +163,24 @@ export const map = defineComponent({
           ))}
         </ComposableMap>
         {values.length > 0 && (
-          <HStack gap={3} vAlign="center" className="text-base" aria-label={data.unit}>
-            <Text type="inherit">
+          <section
+            className="flex items-center gap-3 text-sm text-muted-foreground"
+            aria-label={data.unit}
+          >
+            <p>
               {minimum} {data.unit}
-            </Text>
-            <HStack as="span" className="map-scale h-3 flex-1" aria-hidden="true" />
-            <Text type="inherit">
+            </p>
+            <span className="map-scale h-2 flex-1 rounded-full" aria-hidden="true" />
+            <p>
               {maximum} {data.unit}
-            </Text>
-          </HStack>
+            </p>
+          </section>
         )}
-        <dl>
+        <section aria-label={data.title}>
           {data.cantons.map((canton) => (
-            <HStack
+            <dl
               key={canton.code}
-              wrap="wrap"
-              hAlign="between"
-              vAlign="stretch"
-              gap={2}
-              className="border-b border-border"
+              className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm"
             >
               <dt>
                 {canton.label} ({canton.code})
@@ -192,24 +188,17 @@ export const map = defineComponent({
               <dd className="m-0">
                 {canton.value ?? "—"} {data.unit}
               </dd>
-            </HStack>
+            </dl>
           ))}
           {data.markers.map((marker, index) => (
-            <HStack
-              key={index}
-              wrap="wrap"
-              hAlign="between"
-              vAlign="stretch"
-              gap={2}
-              className="border-b border-border"
-            >
+            <dl key={index} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm">
               <dt>{marker.label}</dt>
               <dd className="m-0">
                 {marker.latitude}° N, {marker.longitude}° E
               </dd>
-            </HStack>
+            </dl>
           ))}
-        </dl>
+        </section>
       </figure>
     );
   },

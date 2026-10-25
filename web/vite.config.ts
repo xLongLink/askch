@@ -4,6 +4,7 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   publicDir: "static",
+  resolve: { alias: { "@": new URL("./src", import.meta.url).pathname } },
   build: { outDir: "build" },
   server: {
     proxy: {
