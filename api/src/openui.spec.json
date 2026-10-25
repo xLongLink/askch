@@ -2,11 +2,11 @@
   "root": "Stack",
   "components": {
     "Stack": {
-      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice | Card | Grid)[])",
+      "signature": "Stack(children: (Text | Heading | Link | Chart | Map | Invoice | Card | Grid)[])",
       "description": "The root vertical layout, containing at most 24 basic components, cards, or grids. Do not nest stacks."
     },
     "Card": {
-      "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice)[])",
+      "signature": "Card(children: (Text | Heading | Link | Chart | Map | Invoice)[])",
       "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
     },
     "Grid": {
@@ -24,10 +24,6 @@
     "Link": {
       "signature": "Link(label: string, url: string)",
       "description": "A descriptive link to an HTTP(S) source, without credentials."
-    },
-    "FollowUp": {
-      "signature": "FollowUp(label: string, message: string)",
-      "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
     },
     "Chart": {
       "signature": "Chart(title: string, type: \"line\" | \"bar\", xLabel: string, yLabel: string, labels: string[], series: {name: string, values: number[]}[] | {name: string, values: number[]})",
@@ -64,9 +60,6 @@
       "Link": {
         "$ref": "#/$defs/Link"
       },
-      "FollowUp": {
-        "$ref": "#/$defs/FollowUp"
-      },
       "Chart": {
         "$ref": "#/$defs/Chart"
       },
@@ -84,7 +77,6 @@
       "Heading",
       "Text",
       "Link",
-      "FollowUp",
       "Chart",
       "Map",
       "Invoice"
@@ -107,9 +99,6 @@
                 },
                 {
                   "$ref": "#/$defs/Link"
-                },
-                {
-                  "$ref": "#/$defs/FollowUp"
                 },
                 {
                   "$ref": "#/$defs/Chart"
@@ -203,27 +192,6 @@
         ],
         "additionalProperties": false,
         "description": "A descriptive link to an HTTP(S) source, without credentials."
-      },
-      "FollowUp": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "message": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 2000
-          }
-        },
-        "required": [
-          "label",
-          "message"
-        ],
-        "additionalProperties": false,
-        "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
       },
       "Chart": {
         "type": "object",
@@ -601,9 +569,6 @@
                 },
                 {
                   "$ref": "#/$defs/Link"
-                },
-                {
-                  "$ref": "#/$defs/FollowUp"
                 },
                 {
                   "$ref": "#/$defs/Chart"

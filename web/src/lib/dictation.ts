@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { z } from "zod/v4";
 import * as wavEncoder from "wav-encoder";
-import { useMicrophoneLevel } from "@/components/ballmac/voice-input";
+import { useMicrophoneLevel } from "@/components/ui/voice-input";
 
 const transcriptSchema = z.string().trim().min(1).max(100000);
 const recordingFormats = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus"];

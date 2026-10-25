@@ -5,7 +5,6 @@ import { Check, Loader2, Mic, Square, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "cn";
-import { useMessages } from "@/lib/ballmac/i18n";
 
 type VoiceState = "idle" | "listening" | "processing";
 
@@ -93,14 +92,11 @@ function VoiceInput({
     level = 0,
     variant = "button",
     duration,
-    processingLabel,
-    label,
+    processingLabel = "Transcribing…",
+    label = "Start voice input",
     className,
     ...props
 }: VoiceInputProps) {
-    const msg = useMessages();
-    processingLabel ??= msg("voice-input.processingLabel", "Transcribing…");
-    label ??= msg("voice-input.label", "Start voice input");
     const reduce = useReducedMotion();
     const [internal, setInternal] = React.useState<VoiceState>("idle");
     const state = stateProp ?? internal;
@@ -189,7 +185,7 @@ function VoiceInput({
                     disabled={disabled || state === "processing"}
                     aria-label={
                         listening
-                            ? msg("voice-input.stopAndUseRecording", "Stop and use recording")
+                            ? "Stop and use recording"
                             : state === "processing"
                               ? processingLabel
                               : label
@@ -247,7 +243,7 @@ function VoiceInput({
                         type="button"
                         onClick={cancel}
                         disabled={disabled}
-                        aria-label={msg("voice-input.discardRecording", "Discard recording")}
+                        aria-label="Discard recording"
                         className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
                     >
                         <X aria-hidden="true" className="size-4" />
@@ -270,18 +266,13 @@ function VoiceInput({
                                 ))}
                             </div>
                             <span className="w-10 shrink-0 text-end font-mono text-xs text-muted-foreground tabular-nums">
-                                <span className="sr-only">
-                                    {msg("voice-input.recordingTime", "Recording time")}{" "}
-                                </span>
+                                <span className="sr-only">Recording time </span>
                                 {formatClock(shownSeconds)}
                             </span>
                             <button
                                 type="button"
                                 onClick={stop}
-                                aria-label={msg(
-                                    "voice-input.stopAndUseRecording",
-                                    "Stop and use recording",
-                                )}
+                                aria-label="Stop and use recording"
                                 className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground outline-none transition-colors hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             >
                                 <Check aria-hidden="true" className="size-4" />
