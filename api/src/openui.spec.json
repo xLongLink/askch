@@ -2,12 +2,16 @@
   "root": "Stack",
   "components": {
     "Stack": {
-      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice | Card)[])",
-      "description": "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks."
+      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice | Card | Grid)[])",
+      "description": "The root vertical layout, containing at most 24 basic components, cards, or grids. Do not nest stacks."
     },
     "Card": {
       "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice)[])",
       "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
+    },
+    "Grid": {
+      "signature": "Grid(children: Card[])",
+      "description": "A responsive grid of up to 20 cards, one per result. One column on narrow screens and two on wider screens."
     },
     "Heading": {
       "signature": "Heading(text: string, level?: 2 | 3 | 4)",
@@ -48,6 +52,9 @@
       "Card": {
         "$ref": "#/$defs/Card"
       },
+      "Grid": {
+        "$ref": "#/$defs/Grid"
+      },
       "Heading": {
         "$ref": "#/$defs/Heading"
       },
@@ -73,6 +80,7 @@
     "required": [
       "Stack",
       "Card",
+      "Grid",
       "Heading",
       "Text",
       "Link",
@@ -114,6 +122,9 @@
                 },
                 {
                   "$ref": "#/$defs/Card"
+                },
+                {
+                  "$ref": "#/$defs/Grid"
                 }
               ]
             }
@@ -123,7 +134,7 @@
           "children"
         ],
         "additionalProperties": false,
-        "description": "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks."
+        "description": "The root vertical layout, containing at most 24 basic components, cards, or grids. Do not nest stacks."
       },
       "Text": {
         "type": "object",
@@ -612,6 +623,23 @@
         ],
         "additionalProperties": false,
         "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
+      },
+      "Grid": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Card"
+            }
+          }
+        },
+        "required": [
+          "children"
+        ],
+        "additionalProperties": false,
+        "description": "A responsive grid of up to 20 cards, one per result. One column on narrow screens and two on wider screens."
       }
     }
   }
