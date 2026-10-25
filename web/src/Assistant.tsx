@@ -3,7 +3,8 @@ import { Renderer } from "@openuidev/react-lang";
 import { marked, type Token } from "marked";
 import sanitizeHtml from "sanitize-html";
 import { z } from "zod/v4";
-import { library } from "./openui";
+import { componentArguments, library } from "./openui";
+import { normalizeOpenUI } from "./lib/openui";
 
 const followUpEvent = z.object({
     type: z.literal("continue_conversation"),
@@ -30,7 +31,7 @@ function OpenUIBlock({
         <section>
             <Renderer
                 library={library}
-                response={code}
+                response={normalizeOpenUI(code, componentArguments)}
                 isStreaming={isStreaming}
                 publishObservability={false}
                 onError={(errors) =>
