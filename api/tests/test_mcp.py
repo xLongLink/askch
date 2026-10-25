@@ -23,7 +23,7 @@ def test_mounted_mcp(load_app):
         headers["Mcp-Protocol-Version"] = result["protocolVersion"]
         response = client.post("/api/mcp/", headers=headers, json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = response.json()["result"]["tools"]
-        assert [tool["name"] for tool in tools] == ["meteo", "government_announcements", "cantons", "cities"]
+        assert [tool["name"] for tool in tools] == ["meteo", "government_announcements", "cantons", "cities", "ictjobs"]
         assert tools[0]["inputSchema"]["required"] == ["location"]
         response = client.post(
             "/api/mcp/",
