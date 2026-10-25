@@ -1,4 +1,3 @@
-import httpx2
 from typing import Literal, Annotated
 from datetime import UTC, date, time, datetime, timedelta
 from pydantic import Field
@@ -32,7 +31,7 @@ async def government_announcements(
     if language not in {"de", "fr", "it", "en"} or not 1 <= limit <= 20 or offset < 0:
         raise ToolError("Choose de, fr, it, or en, a limit between 1 and 20, and a nonnegative offset.")
 
-    # Fetch press releases only, wEithout accepting arbitrary upstream URLs.
+    # Fetch press releases only, without accepting arbitrary upstream URLs.
     params = {
         "languages": language,
         "start_date": datetime.combine(start_date, time.min, UTC).isoformat(),
@@ -41,12 +40,5 @@ async def government_announcements(
         "limit": limit,
         "offset": offset,
     }
-    try:
-        response = await website.fetch("https://www.newsd.admin.ch/v1/search", params=params)
-        return AnnouncementResults.model_validate(response.json())
-    except httpx2.TimeoutException:
-        raise ToolError("News Service Bund announcement lookup timed out.")
-    except httpx2.HTTPError:
-        raise ToolError("Official federal announcements could not be fetched.")
-    except ValueError:
-        raise ToolError("News Service Bund returned an invalid announcement response.")
+    response = await website.fetch("https://www.newsd.admin.ch/v1/search", params=params)
+    return AnnouncementResults.model_validate(response.json())

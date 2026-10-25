@@ -56,4 +56,4 @@ def test_mcp_tool_errors(monkeypatch, load_app):
         )
         result = response.json()["result"]
         assert result["isError"] is True
-        assert "Forecast unavailable." in result["content"][0]["text"]
+        assert "The data source returned an invalid response." in result["content"][0]["text"]

@@ -38,6 +38,7 @@ The project aims to make information about Switzerland more accessible by allowi
 
 ## JavaScript / TypeScript Guidelines
 
+- DO use React and Meta's Astryx UI library for the web frontend. DON'T use shadcn.
 - DON'T use browsers or browser automation to inspect or verify changes.
 - DO inspect source and run code-level checks instead.
 - PREFER precise types, generics, `unknown` with narrowing, discriminated unions, and established validation libraries.
