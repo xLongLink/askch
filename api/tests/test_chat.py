@@ -70,8 +70,11 @@ def test_streaming_chat(load_app):
         assert request.headers["authorization"] == "Bearer test-key"
         body = json.loads(request.content)
         assert body["model"] == "swiss-ai/Apertus-v1.5-70B"
-        assert body["messages"][0] == {"role": "system", "content": settings().SYSTEM_PROMPT}
-        assert body["messages"][1:] == [{"role": "user", "content": "Hello"}]
+        system_messages = [item for item in body["messages"] if item["role"] == "system"]
+        assert len(system_messages) == 1
+        assert system_messages[0]["content"].startswith(settings().SYSTEM_PROMPT)
+        assert "The conversation language is fr." in system_messages[0]["content"]
+        assert [item for item in body["messages"] if item["role"] != "system"] == [{"role": "user", "content": "Hello"}]
         assert body["stream"] is True
         assert body["max_tokens"] == 4096
         assert request.extensions["timeout"] == {"connect": 10, "read": 60, "write": 60, "pool": 60}
@@ -86,7 +89,7 @@ def test_streaming_chat(load_app):
 
     app = load_app(settings(), httpx2.MockTransport(upstream))
     with TestClient(app) as client:
-        response = client.post("/api/chat", json={"messages": [message()]})
+        response = client.post("/api/chat", json={"context": {"language": "fr"}, "messages": [message()]})
         assert response.status_code == 200
         assert response.headers["x-vercel-ai-ui-message-stream"] == "v1"
         chunks = events(response)
@@ -117,7 +120,7 @@ def test_followup_accepts_step_start_parts(assistant_text, load_app):
         if assistant_text:
             expected.append({"role": "assistant", "content": assistant_text})
         expected.append({"role": "user", "content": "Tell me more"})
-        assert json.loads(request.content)["messages"][1:] == expected
+        assert [item for item in json.loads(request.content)["messages"] if item["role"] != "system"] == expected
         return httpx2.Response(
             200,
             text=(

@@ -4,9 +4,7 @@ version = "0.0.0"
 description = "Swiss chatbot API"
 requires-python = ">=3.12"
 dependencies = [
-    "beautifulsoup4>=4.13,<5",
     "fastapi>=0.162,<1",
-    "fsspec>=2026.9.0",
     "httpx2>=2.16,<3",
     "mcp>=2.3,<3",
     "pydantic-ai-slim[mcp,openai,ui]>=2.61.0",

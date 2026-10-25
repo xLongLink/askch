@@ -1,5 +1,12 @@
 # syntax=docker/dockerfile:1
 
+FROM node:26-bookworm-slim AS web-build
+WORKDIR /app/web
+COPY web/package.json web/package-lock.json web/.npmrc ./
+RUN npm ci --ignore-scripts
+COPY web/ ./
+RUN npm run check && npm run build
+
 FROM python:3.12-slim-bookworm AS api-build
 COPY --from=ghcr.io/astral-sh/uv:0.9.5 /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
@@ -7,14 +14,8 @@ WORKDIR /app
 COPY api/pyproject.toml api/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-install-project
 COPY api/src ./src
+COPY --from=web-build /app/api/src/openui.txt /app/api/src/openui.spec.json ./src/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-editable
-
-FROM node:24-bookworm-slim AS web-build
-WORKDIR /app/web
-COPY web/package.json web/package-lock.json web/.npmrc ./
-RUN npm ci --ignore-scripts
-COPY web/ ./
-RUN npm run check && npm run build
 
 FROM python:3.12-slim-bookworm AS app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1

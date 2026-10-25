@@ -23,7 +23,7 @@ def test_mounted_mcp(load_app):
         headers["Mcp-Protocol-Version"] = result["protocolVersion"]
         response = client.post("/api/mcp/", headers=headers, json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         tools = response.json()["result"]["tools"]
-        assert [tool["name"] for tool in tools] == ["meteo"]
+        assert [tool["name"] for tool in tools] == ["meteo", "government_announcements"]
         assert tools[0]["inputSchema"]["required"] == ["location"]
         response = client.post(
             "/api/mcp/",
@@ -43,10 +43,10 @@ def test_mounted_mcp(load_app):
 def test_mcp_tool_errors(monkeypatch, load_app):
     """Report forecast lookup failures as MCP tool errors."""
 
-    async def fetch(location, parameter, hours):
+    async def fetch(url, **kwargs):
         raise ValueError("Forecast unavailable.")
 
-    monkeypatch.setattr("src.mcp.server.fetch_meteo", fetch)
+    monkeypatch.setattr("src.utils.website.fetch", fetch)
     app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
     with TestClient(app, base_url="http://localhost:8000") as client:
         response = client.post(
@@ -56,4 +56,4 @@ def test_mcp_tool_errors(monkeypatch, load_app):
         )
         result = response.json()["result"]
         assert result["isError"] is True
-        assert "Forecast unavailable." in result["content"][0]["text"]
+        assert "The data source returned an invalid response." in result["content"][0]["text"]

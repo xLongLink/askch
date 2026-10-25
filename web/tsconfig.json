@@ -1,7 +1,16 @@
 {
-  "extends": "$app/tsconfig",
   "compilerOptions": {
-    "strict": true
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "types": ["vite-plus/client"]
   },
   "include": ["src", "vite.config.ts"]
 }

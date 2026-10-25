@@ -1,4 +1,5 @@
-import fsspec
+import fcntl
+import hashlib
 import logging
 from uuid import uuid4
 from typing import Literal
@@ -27,6 +28,7 @@ class ChatTrace(BaseModel):
     model: str
     status: Literal["interrupted", "completed", "error"] = "interrupted"
     started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    conversation_id: str
 
     # Retain ordered events for JSON exports.
     events: list[TraceEvent] = Field(default_factory=list)
@@ -41,11 +43,17 @@ class ChatTrace(BaseModel):
         self.events.append(TraceEvent(event=event, data=data))
 
     def save(self, directory: Path) -> None:
-        """Write a JSON file through fsspec without exposing storage errors to chat clients."""
+        """Append a turn to its conversation's JSONL log without disrupting chat."""
 
         # Keep persistence failures out of an otherwise valid streamed response.
         try:
-            with fsspec.open(str(directory / f"{self.id}.json"), "wt", encoding="utf-8", auto_mkdir=True) as file:
-                file.write(self.model_dump_json(indent=2))
+            directory.mkdir(parents=True, exist_ok=True)
+
+            # Hash client-supplied IDs so they cannot become filesystem paths.
+            filename = hashlib.sha256(self.conversation_id.encode("utf-8")).hexdigest()
+            with (directory / f"{filename}.jsonl").open("a", encoding="utf-8") as output:
+                # Serialize appends across requests and worker processes until the file closes.
+                fcntl.flock(output, fcntl.LOCK_EX)
+                output.write(self.model_dump_json() + "\n")
         except OSError:
             logger.exception("Could not save chat trace %s", self.id)
