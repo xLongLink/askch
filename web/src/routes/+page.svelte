@@ -3,6 +3,7 @@
   import { ArrowUp, Square } from '@lucide/svelte';
   import { marked } from 'marked';
   import sanitizeHtml from 'sanitize-html';
+  import { onMount } from 'svelte';
   import { Button } from '#lib/components/ui/button/index.js';
   import { Textarea } from '#lib/components/ui/textarea/index.js';
 
@@ -17,6 +18,28 @@
   let input = $state('');
   let messagesEnd = $state<HTMLDivElement>();
   const busy = $derived(chat.status === 'submitted' || chat.status === 'streaming');
+
+  // Use language preferences as a regional hint without requesting location.
+  const defaultGreeting = { languages: ['en'], lang: 'en', text: 'Hello! Welcome.' };
+  const greetings = [
+    { languages: ['de', 'gsw'], lang: 'de-CH', text: 'Grüezi! Willkommen.' },
+    { languages: ['fr'], lang: 'fr-CH', text: 'Bonjour ! Bienvenue.' },
+    { languages: ['it'], lang: 'it-CH', text: 'Ciao! Benvenuti.' },
+    { languages: ['rm'], lang: 'rm-CH', text: 'Allegra! Bainvegni.' },
+    defaultGreeting,
+  ];
+  let greeting = $state(defaultGreeting);
+
+  onMount(() => {
+    for (const locale of navigator.languages.length ? navigator.languages : [navigator.language]) {
+      const language = locale.toLowerCase().split('-')[0];
+      const match = greetings.find((candidate) => candidate.languages.includes(language));
+      if (match) {
+        greeting = match;
+        break;
+      }
+    }
+  });
 
   function send(text = input) {
     if (!text.trim() || busy) return;
@@ -37,7 +60,7 @@
   <meta name="description" content="Explore Swiss data through natural language." />
 </svelte:head>
 
-<div class="flex h-dvh flex-col">
+<div class="flex h-dvh flex-col bg-cover bg-center" style:--overlay-opacity={chat.messages.length === 0 ? '60%' : '83%'} style="background-image: linear-gradient(rgb(253 252 251 / var(--overlay-opacity)), rgb(253 252 251 / var(--overlay-opacity))), url('/mountains.jpg')">
   <main class="flex min-h-0 flex-1 flex-col" class:justify-center={chat.messages.length === 0}>
     {#if chat.messages.length > 0}
       <div class="flex-1 overflow-y-auto">
@@ -59,7 +82,7 @@
     <div class="mx-auto w-full max-w-3xl shrink-0 px-4 pb-4 pt-3 sm:px-5">
       {#if chat.messages.length === 0}
         <span role="img" aria-label="Swiss flag" class="mb-6 block text-center text-4xl">🇨🇭</span>
-        <h1 class="mb-8 text-center text-3xl font-medium tracking-tight sm:text-4xl">How can I help?</h1>
+        <h1 lang={greeting.lang} class="mb-8 text-center text-3xl font-medium tracking-tight sm:text-4xl">{greeting.text}</h1>
       {/if}
       {#if chat.error}<div role="alert" class="mb-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">{chat.error.message}<Button variant="ghost" size="sm" onclick={() => { chat.clearError(); void chat.regenerate(); }}>Try again</Button></div>{/if}
       <form class="flex items-end gap-2 rounded-xl bg-neutral-200 p-2" onsubmit={(event) => { event.preventDefault(); send(); }}>
@@ -68,7 +91,7 @@
       </form>
     </div>
   </main>
-  <footer class="shrink-0 px-4 pb-4 text-center text-xs text-muted-foreground">
+  <footer class="shrink-0 px-4 pb-4 text-center text-xs text-neutral-600">
     AI can make mistakes · <a href="https://github.com/xLongLink/askch" class="underline">Open Source</a> · Created by <a href="https://www.linkedin.com/company/longlink" class="underline">LongLink SAGL</a>
   </footer>
 </div>

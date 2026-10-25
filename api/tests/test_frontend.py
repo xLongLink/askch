@@ -76,7 +76,7 @@ def test_api_routes_with_frontend(client):
         "/api/mcp/", headers={"Accept": "application/json, text/event-stream"}, json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
     )
     assert response.status_code == 200
-    assert [tool["name"] for tool in response.json()["result"]["tools"]] == ["meteo"]
+    assert [tool["name"] for tool in response.json()["result"]["tools"]] == ["meteo", "government_announcements"]
 
 
 def test_chat_stream_with_frontend(frontend_dir, load_app):

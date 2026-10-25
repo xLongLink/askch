@@ -18,6 +18,7 @@ The project aims to make information about Switzerland more accessible by allowi
 ## Python Guidelines
 
 - AVOID renaming imports.
+- AVOID using the `as exc`
 - PREFER the simplest correct implementation. AVOID features needed only for hypothetical future use.
 - DO construct class instances in separate, multi-line assignments before invoking their methods.
 - PREFER idiomatic Python and readability over efficiency.

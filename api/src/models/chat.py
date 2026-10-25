@@ -1,3 +1,4 @@
+from uuid import uuid4
 from typing import Literal, Annotated
 from pydantic import Field, BaseModel, model_validator
 
@@ -31,6 +32,8 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     """Validate the messages supplied to a chat request."""
 
+    # Keep SDK conversation identity while supporting clients without an ID.
+    id: str = Field(default_factory=lambda: str(uuid4()), min_length=1, max_length=256)
     messages: list[Message] = Field(min_length=1, max_length=100)
 
     @model_validator(mode="after")

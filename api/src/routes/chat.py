@@ -103,7 +103,7 @@ async def chat(
     """Stream the chat agent's text using the existing validated request boundary."""
 
     # Save the trace after stream resources close, including errors and interrupted requests.
-    trace = ChatTrace(model=settings.INFOMANIAK_MODEL)
+    trace = ChatTrace(model=settings.INFOMANIAK_MODEL, conversation_id=body.id)
     for message in body.messages:
         trace.record("user message" if message.role == "user" else "assistant message", message.text)
     resources.push_async_callback(anyio.to_thread.run_sync, trace.save, settings.CHATS_DIR)
@@ -132,7 +132,7 @@ async def chat(
 
     # Forward only validated text, not client-supplied provider metadata or control parts.
     run_input = request_types.SubmitMessage(
-        id=str(uuid4()),
+        id=body.id,
         messages=[
             request_types.UIMessage(id=message.id, role=message.role, parts=[request_types.TextUIPart(text=message.text)])
             for message in body.messages

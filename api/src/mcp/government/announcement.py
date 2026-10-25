@@ -1,0 +1,52 @@
+import httpx2
+from typing import Literal, Annotated
+from datetime import UTC, date, time, datetime, timedelta
+from pydantic import Field
+from src.utils import website
+from src.models.announcements import AnnouncementResults
+from mcp.server.mcpserver.exceptions import ToolError
+
+
+async def government_announcements(
+    language: Literal["de", "fr", "it", "en"] = "de",
+    start_date: Annotated[date | None, Field(description="First publication date (inclusive), YYYY-MM-DD.")] = None,
+    end_date: Annotated[date | None, Field(description="Last publication date (inclusive), YYYY-MM-DD. Defaults to today in UTC.")] = None,
+    limit: Annotated[int, Field(ge=1, le=20)] = 5,
+    offset: Annotated[int, Field(ge=0)] = 0,
+) -> AnnouncementResults:
+    """Get official Swiss federal press releases directly from News Service Bund.
+
+    Defaults to the last 30 days, newest first. Use offset to fetch more results.
+    Returns original full text as HTML paragraphs, publication dates, publisher IDs,
+    and official source links. Cite those links and distinguish quotations from summaries.
+    Only announcements published in the requested language are returned; an empty page
+    does not imply there are no announcements in other languages. Does not cover cantonal
+    or municipal announcements.
+    """
+
+    # Use inclusive calendar dates and default to the past 30 days in UTC.
+    end_date = end_date or datetime.now(UTC).date()
+    start_date = start_date or end_date - timedelta(days=min(29, (end_date - date.min).days))
+    if start_date > end_date:
+        raise ToolError("The start date must not be after the end date.")
+    if language not in {"de", "fr", "it", "en"} or not 1 <= limit <= 20 or offset < 0:
+        raise ToolError("Choose de, fr, it, or en, a limit between 1 and 20, and a nonnegative offset.")
+
+    # Fetch press releases only, wEithout accepting arbitrary upstream URLs.
+    params = {
+        "languages": language,
+        "start_date": datetime.combine(start_date, time.min, UTC).isoformat(),
+        "end_date": datetime.combine(end_date, time.max, UTC).isoformat(),
+        "newsCategoryIDs": "medienmitteilung",
+        "limit": limit,
+        "offset": offset,
+    }
+    try:
+        response = await website.fetch("https://www.newsd.admin.ch/v1/search", params=params)
+        return AnnouncementResults.model_validate(response.json())
+    except httpx2.TimeoutException:
+        raise ToolError("News Service Bund announcement lookup timed out.")
+    except httpx2.HTTPError:
+        raise ToolError("Official federal announcements could not be fetched.")
+    except ValueError:
+        raise ToolError("News Service Bund returned an invalid announcement response.")
