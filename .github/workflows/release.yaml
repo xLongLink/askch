@@ -50,6 +50,8 @@ jobs:
           context: .
           target: app
           platforms: linux/amd64
+          build-args: |
+            VITE_APP_VERSION=${{ steps.tag.outputs.value }}
           outputs: |
             type=docker,name=swiss:${{ steps.tag.outputs.value }},dest=${{ runner.temp }}/swiss.tar
             ${{ github.ref_type == 'tag' && format('type=registry,name={0}:{1}', steps.tag.outputs.image, steps.tag.outputs.value) || '' }}
