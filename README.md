@@ -19,11 +19,12 @@ Make Swiss data accessible through natural language.
 
 ## Features
 
-- [Aprtus 1.5](https://www.apertus-ai.org/articles/2026-07-apertus-1-5/)
-- MCP server that connect to swiss services
+- 🇨🇭 **Swiss hosting:** Hosted in Switzerland on Infomaniak.
+- 🤖 **Swiss AI:** Powered by [Apertus 1.5](https://www.apertus-ai.org/articles/2026-07-apertus-1-5/).
+- 🔌 **Connected to Swiss services:** Access Swiss data through an MCP server.
+- 💬 **Natural language:** Explore Swiss data by asking questions in your own words.
+- 📖 **Open source:** Free to use, inspect, and extend under the MIT license.
 
-TODO:
--  SDK
 
 <br />
 

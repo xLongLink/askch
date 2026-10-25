@@ -1,4 +1,4 @@
-import { defineComponent } from "@openuidev/react-lang";
+import { defineComponent, useIsStreaming } from "@openuidev/react-lang";
 import { Heading } from "@astryxdesign/core/Heading";
 import { VStack } from "@astryxdesign/core/VStack";
 import {
@@ -43,8 +43,16 @@ export const chart = defineComponent({
     "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data).",
   props: chartProps,
   component: ({ props }) => {
-    // Validate generated data before passing it to the chart library.
-    const data = chartProps.parse(props);
+    // Wait for complete streamed props without accepting invalid finished output.
+    const isStreaming = useIsStreaming();
+    const result = chartProps.safeParse(props);
+    if (!result.success) {
+      if (isStreaming) return null;
+      throw result.error;
+    }
+
+    // Pass only validated data to the chart library.
+    const data = result.data;
     const rows = data.labels.map((label, index) => ({
       label,
       ...Object.fromEntries(

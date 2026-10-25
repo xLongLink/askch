@@ -1,7 +1,6 @@
-import { defineComponent } from "@openuidev/react-lang";
+import { defineComponent, useIsStreaming } from "@openuidev/react-lang";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
-import { Link } from "@astryxdesign/core/Link";
 import { Text } from "@astryxdesign/core/Text";
 import { Annotation, ComposableMap, Geographies, Geography, Marker } from "react-simple-maps/core";
 import { z } from "zod/v4";
@@ -76,8 +75,16 @@ export const map = defineComponent({
     "A Swiss canton map with optional numeric canton shading and labeled location markers. Supply up to 26 unique two-letter canton codes and 20 markers. Coordinates are WGS84 longitude/latitude within Switzerland's bounding box. Use null for missing canton values; pass empty arrays for unused layers. Boundaries are generalized historical outlines, not current administrative or navigation data.",
   props: mapProps,
   component: ({ props }) => {
-    // Validate generated values and derive a shared sequential color scale.
-    const data = mapProps.parse(props);
+    // Wait for complete streamed props without accepting invalid finished output.
+    const isStreaming = useIsStreaming();
+    const result = mapProps.safeParse(props);
+    if (!result.success) {
+      if (isStreaming) return null;
+      throw result.error;
+    }
+
+    // Derive a shared sequential color scale from validated values.
+    const data = result.data;
     const values = data.cantons.flatMap((canton) => (canton.value === null ? [] : [canton.value]));
     const minimum = values.length ? Math.min(...values) : 0;
     const maximum = values.length ? Math.max(...values) : 0;
@@ -115,8 +122,12 @@ export const map = defineComponent({
                   <Geography
                     key={geography.rsmKey}
                     geography={geography}
-                    fill={intensity === null ? "#e5e5e5" : `hsl(210 65% ${95 - intensity * 60}%)`}
-                    stroke="#fff"
+                    fill={
+                      intensity === null
+                        ? "color-mix(in srgb, var(--color-text-secondary) 30%, var(--color-background-surface))"
+                        : `hsl(210 65% ${95 - intensity * 60}%)`
+                    }
+                    stroke="var(--color-text-secondary)"
                     strokeWidth={1}
                   >
                     <title>
@@ -199,20 +210,6 @@ export const map = defineComponent({
             </HStack>
           ))}
         </dl>
-        <figcaption className="mt-2 text-sm text-secondary">
-          <Link
-            href="https://github.com/markmarkoh/datamaps/blob/38eacee50e9928aab28959785e0a07f25077e943/src/js/data/che.json"
-            target="_blank"
-            rel="noopener noreferrer"
-            hasUnderline
-          >
-            Natural Earth / DataMaps (2016)
-          </Link>
-          {" · © Mark DiMarco · "}
-          <Link href="/maps-license.txt" target="_blank" rel="noopener noreferrer" hasUnderline>
-            MIT
-          </Link>
-        </figcaption>
       </figure>
     );
   },

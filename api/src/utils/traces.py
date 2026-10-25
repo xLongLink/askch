@@ -1,7 +1,5 @@
-import fcntl
 import hashlib
 import logging
-from uuid import uuid4
 from typing import Literal
 from pathlib import Path
 from datetime import UTC, datetime
@@ -21,10 +19,9 @@ class TraceEvent(BaseModel):
 
 
 class ChatTrace(BaseModel):
-    """Persist one chat request's public messages and execution trace."""
+    """Persist a conversation and its latest execution trace."""
 
-    # Identify the request and its completion state.
-    id: str = Field(default_factory=lambda: str(uuid4()))
+    # Identify the conversation and its latest completion state.
     model: str
     status: Literal["interrupted", "completed", "error"] = "interrupted"
     started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -43,7 +40,7 @@ class ChatTrace(BaseModel):
         self.events.append(TraceEvent(event=event, data=data))
 
     def save(self, directory: Path) -> None:
-        """Append a turn to its conversation's JSONL log without disrupting chat."""
+        """Replace the conversation's JSON snapshot without disrupting chat."""
 
         # Keep persistence failures out of an otherwise valid streamed response.
         try:
@@ -51,9 +48,6 @@ class ChatTrace(BaseModel):
 
             # Hash client-supplied IDs so they cannot become filesystem paths.
             filename = hashlib.sha256(self.conversation_id.encode("utf-8")).hexdigest()
-            with (directory / f"{filename}.jsonl").open("a", encoding="utf-8") as output:
-                # Serialize appends across requests and worker processes until the file closes.
-                fcntl.flock(output, fcntl.LOCK_EX)
-                output.write(self.model_dump_json() + "\n")
+            (directory / f"{filename}.json").write_text(self.model_dump_json(indent=2) + "\n", encoding="utf-8")
         except OSError:
-            logger.exception("Could not save chat trace %s", self.id)
+            logger.exception("Could not save chat trace %s", self.conversation_id)

@@ -3,15 +3,18 @@ import { DefaultChatTransport } from "ai";
 import { useChat } from "@ai-sdk/react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
+import { Grid } from "@astryxdesign/core/Grid";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
 import { VStack } from "@astryxdesign/core/VStack";
 import { ArrowUp, CircleAlert, Square } from "lucide-react";
+import { z } from "zod/v4";
 import { AssistantMessage } from "./Assistant";
 
 const defaultGreeting = { languages: ["en"], lang: "en", text: "Hello! Welcome." };
+const samplesSchema = z.array(z.string().trim().min(1).max(2000)).length(4);
 const greetings = [
   { languages: ["de", "gsw"], lang: "de-CH", text: "Grüezi! Willkommen." },
   { languages: ["fr"], lang: "fr-CH", text: "Bonjour ! Bienvenue." },
@@ -53,8 +56,27 @@ export function App() {
     },
   });
   const [input, setInput] = useState("");
+  const [samples, setSamples] = useState<string[]>([]);
   const messagesEnd = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
+
+  // Load optional conversation starters and cancel the request when leaving the page.
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadSamples() {
+      try {
+        const response = await fetch("/api/samples", { signal: controller.signal });
+        if (!response.ok) throw new Error("Unable to load sample messages.");
+        const data: unknown = await response.json();
+        const samples = samplesSchema.parse(data);
+        if (!controller.signal.aborted) setSamples(samples);
+      } catch {
+        if (!controller.signal.aborted) console.error("[Chat] Unable to load sample messages.");
+      }
+    }
+    void loadSamples();
+    return () => controller.abort();
+  }, []);
 
   // Synchronize the scroll position with streamed content and request status.
   useEffect(() => {
@@ -224,6 +246,28 @@ export function App() {
               />
             )}
           </form>
+          {messages.length === 0 && samples.length > 0 && (
+            <Grid columns={2} gap={3} className="mt-4" aria-label="Sample messages">
+              {samples.map((sample) => (
+                <Button
+                  key={sample}
+                  label={sample}
+                  className="h-auto min-w-0 py-3"
+                  isDisabled={busy}
+                  clickAction={async () => {
+                    if (busy) return;
+                    setInput("");
+                    clearError();
+                    await sendMessage({ text: sample });
+                  }}
+                >
+                  <Text type="inherit" className="whitespace-normal wrap-anywhere">
+                    {sample}
+                  </Text>
+                </Button>
+              ))}
+            </Grid>
+          )}
         </VStack>
       </VStack>
       <footer className="shrink-0 px-4 pb-4 text-center text-sm text-secondary [&_a]:underline">
