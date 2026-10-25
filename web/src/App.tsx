@@ -5,12 +5,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, CircleAlert, Square } from "lucide-react";
-import { z } from "zod/v4";
 import { AssistantMessage } from "./Assistant";
 import { useDictation } from "./dictation";
 import { VoiceInput } from "@/components/ballmac/voice-input";
-
-const samplesSchema = z.array(z.string().trim().min(1).max(2000)).length(4);
 
 export function App() {
     // Fix the initial UI language for the lifetime of this conversation.
@@ -45,28 +42,8 @@ export function App() {
     const dictation = useDictation((text) => {
         setInput((draft) => (draft.trim() ? `${draft.trimEnd()} ${text}` : text));
     });
-    const [samples, setSamples] = useState<string[]>([]);
     const messagesEnd = useRef<HTMLParagraphElement>(null);
     const busy = status === "submitted" || status === "streaming";
-
-    // Load optional conversation starters and cancel the request when leaving the page.
-    useEffect(() => {
-        const controller = new AbortController();
-        async function loadSamples() {
-            try {
-                const response = await fetch("/api/samples", { signal: controller.signal });
-                if (!response.ok) throw new Error("Unable to load sample messages.");
-                const data: unknown = await response.json();
-                const samples = samplesSchema.parse(data);
-                if (!controller.signal.aborted) setSamples(samples);
-            } catch {
-                if (!controller.signal.aborted)
-                    console.error("[Chat] Unable to load sample messages.");
-            }
-        }
-        void loadSamples();
-        return () => controller.abort();
-    }, []);
 
     // Synchronize the scroll position with streamed content and request status.
     useEffect(() => {
@@ -149,9 +126,6 @@ export function App() {
                 <section className="mx-auto w-full max-w-3xl shrink-0 px-5 pt-3 pb-4">
                     {messages.length === 0 && (
                         <header className="greeting text-center">
-                            <p className="mb-6 text-4xl" role="img" aria-label="Swiss flag">
-                                🇨🇭
-                            </p>
                             <h1 className="mb-8 font-medium tracking-tight">
                                 Grüezi! Bonjour! Ciao! Allegra!
                             </h1>
@@ -269,34 +243,14 @@ export function App() {
                                       : "")}
                         </p>
                     )}
-                    {messages.length === 0 && samples.length > 0 && (
-                        <section
-                            className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
-                            aria-label="Sample messages"
-                        >
-                            {samples.map((sample) => (
-                                <Button
-                                    variant="outline"
-                                    key={sample}
-                                    className="h-auto min-w-0 justify-start bg-background/80 px-4 py-3 text-left whitespace-normal wrap-anywhere"
-                                    disabled={busy || dictation.active}
-                                    onClick={async () => {
-                                        if (busy || dictation.active) return;
-                                        setInput("");
-                                        clearError();
-                                        await sendMessage({ text: sample });
-                                    }}
-                                >
-                                    {sample}
-                                </Button>
-                            ))}
-                        </section>
-                    )}
                 </section>
             </main>
             <footer className="shrink-0 px-4 pb-4 text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4">
                 AI can make mistakes · <a href="https://github.com/xLongLink/askch">Open Source</a>{" "}
-                · Created by <a href="https://www.linkedin.com/company/longlink">LongLink SAGL</a>
+                · Created by <a href="https://www.linkedin.com/company/longlink">LongLink</a> in{" "}
+                <span role="img" aria-label="Switzerland">
+                    🇨🇭
+                </span>
             </footer>
         </section>
     );
