@@ -38,7 +38,7 @@ The project aims to make information about Switzerland more accessible by allowi
 
 ## JavaScript / TypeScript Guidelines
 
-- DO use React and Meta's Astryx UI library for the web frontend. DON'T use shadcn.
+- DO use React and shadcn/ui for the web frontend. DON'T use Astryx.
 - DON'T use browsers or browser automation to inspect or verify changes.
 - DO inspect source and run code-level checks instead.
 - PREFER precise types, generics, `unknown` with narrowing, discriminated unions, and established validation libraries.
@@ -63,41 +63,40 @@ The project aims to make information about Switzerland more accessible by allowi
 - DO return raw domain objects or primitive values without reconstructing response models solely for validation.
 - DO run formatting, linting, type checking, and relevant existing tests.
 - After verification, DO review the implementation for further simplification.
-- DO use only `lucide-react` icons. DON'T use Astryx icons.
+- DO use only `lucide-react` icons.
 - For brand logos, you CAN use custom SVG components with official brand colors.
 - DO keep each page simple and standalone.
 
-## Astryx Guidelines
+## shadcn/ui Guidelines
 
-<!-- ASTRYX:START -->
-Astryx v0.7.1 · 168 components
-CLI: run every command as `bunx astryx <cmd>` (shown below as `astryx ...`).
+<!-- SHADCN:START -->
+Use shadcn/ui components with Tailwind CSS and the project's existing theme.
+CLI: run commands from `web/` using `npx shadcn@latest <cmd>`.
 
-SETUP (once, in app entry e.g. main.tsx) — without these, components render unstyled:
-  import "@astryxdesign/core/reset.css";
-  import "@astryxdesign/core/astryx.css";
+SETUP — reuse the existing configuration:
+- `web/components.json` configures the component style, aliases, and stylesheet.
+- Components live in `web/src/components/ui/`; import them through `@/components/ui/<name>`.
+- `web/src/styles.css` imports Tailwind CSS and defines semantic theme tokens.
+- `web/src/main.tsx` imports the stylesheet once. No theme provider is required.
 
-WORKFLOW — start every page from a template, never from scratch:
-1. `astryx build "<idea>"` — names the template to scaffold from and the parts it lacks.
-2. `astryx template <name> <path>` — scaffold it; keep its frame, gap and padding; replace the content.
-3. `astryx template <Block>` for parts it lacks; `astryx component <Name>` to read props before using one.
-Changing an existing page? Keep it: skip step 2 and add blocks/components inside its sections.
+WORKFLOW:
+1. Check existing components and official documentation at https://ui.shadcn.com/docs before adding a component.
+2. `npx shadcn@latest add <component>` — add only the components needed. Don't overwrite customized components without reviewing the changes.
+3. Compose pages from existing components and semantic HTML. Preserve the structure of existing pages unless a layout change is requested.
 
 RULES:
-- No <div> — components handle all layout and spacing.
-- Read `astryx docs layout` before changing a template's frame.
-- Dense data = rows (Table, List/Item), not Card-wrapped lists. Badge = counts only.
-- Style with component props first, then Tailwind utilities backed by tokens. No raw hex/px.
-- Palettes and custom colors go through the theme, never :root overrides. Run `astryx theme add <slug>` to import; `theme eject <slug>` only forks source. See `astryx docs theme`.
-- SELF-CHECK: re-read the file; replace any style={{…}}, raw <div>/<span>, imported .css/@apply, or hardcoded/arbitrary value (bg-[#fff], p-[13px]) with the component or a token-backed utility.
+- Use component variants and sizes first, then token-backed Tailwind utilities for layout and styling.
+- Use semantic HTML where appropriate; don't create wrappers solely to replace standard elements.
+- Dense data belongs in Table or list rows, not Card-wrapped lists. Use Card only for meaningful content groups.
+- Use semantic colors such as `bg-background`, `text-muted-foreground`, and `border-border`. Define shared colors through the theme variables in `web/src/styles.css`, not per-component overrides.
+- Use shadcn's ChartContainer, ChartTooltipContent, and ChartLegendContent with Recharts. Keep chart colors in the theme's chart tokens.
+- Preserve missing chart values as gaps, never zero. Keep an accessible data table available.
+- Preserve keyboard interaction, focus indicators, accessible names, and disabled states when composing components.
+- Prefer existing variants and utilities over inline styles, arbitrary values, or new CSS rules. Dynamic chart and map styling may use inline values where necessary.
+- SELF-CHECK: re-read changed files for unnecessary wrappers, duplicated styling, hardcoded colors, and inaccessible interactions. Run formatting, linting, type checking, a production build, and relevant existing tests without browser automation.
 
-`astryx help` lists every command. Key ones beyond the workflow:
-  search "<query>"   find any component / hook / doc / template
-  discover <words>   integrations you could add
-  docs <topic>       getting-started, principles, tokens, theme … (`astryx docs` lists all)
-  docs cli           commands, API reference, integration authoring
-  upgrade --from <old version> --apply   run after a dependency bump
-<!-- ASTRYX:END -->
+`npx shadcn@latest --help` lists available CLI commands.
+<!-- SHADCN:END -->
 
 ## Commit Message Structure
 

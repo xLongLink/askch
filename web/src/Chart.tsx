@@ -1,18 +1,30 @@
 import { defineComponent, useIsStreaming } from "@openuidev/react-lang";
-import { Heading } from "@astryxdesign/core/Heading";
-import { VStack } from "@astryxdesign/core/VStack";
+import { useId } from "react";
+import { ChevronDown } from "lucide-react";
 import {
-  Bar,
-  CartesianGrid,
-  ComposedChart,
-  Legend,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Area, Bar, CartesianGrid, ComposedChart, XAxis, YAxis } from "recharts";
 import { z } from "zod/v4";
+
+const seriesProps = z.object({
+  name: z.string().trim().min(1).max(100),
+  values: z.array(z.number().finite().nullable()).min(1).max(100),
+});
 
 const chartProps = z
   .object({
@@ -21,30 +33,25 @@ const chartProps = z
     xLabel: z.string().trim().min(1).max(100),
     yLabel: z.string().trim().min(1).max(100),
     labels: z.array(z.string().trim().min(1).max(100)).min(1).max(100),
-    series: z
-      .array(
-        z.object({
-          name: z.string().trim().min(1).max(100),
-          values: z.array(z.number().finite().nullable()).min(1).max(100),
-        }),
-      )
-      .min(1)
-      .max(4),
+    series: z.union([z.array(seriesProps).min(1).max(4), seriesProps]),
   })
-  .refine((data) => data.series.every((series) => series.values.length === data.labels.length), {
-    message: "Each series must have one value per label; use null for missing values.",
-  });
-
-const colors = ["#b00000", "#2563eb", "#15803d", "#9333ea"];
+  .refine(
+    (data) => {
+      const series = Array.isArray(data.series) ? data.series : [data.series];
+      return series.every((series) => series.values.length <= data.labels.length);
+    },
+    { message: "Series values must not exceed the number of labels." },
+  );
 
 export const chart = defineComponent({
   name: "Chart",
   description:
-    "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data).",
+    "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and an array of 1–4 named series (a single series object is also accepted). Use null for missing data; omitted trailing values appear as gaps.",
   props: chartProps,
   component: ({ props }) => {
     // Wait for complete streamed props without accepting invalid finished output.
     const isStreaming = useIsStreaming();
+    const chartId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
     const result = chartProps.safeParse(props);
     if (!result.success) {
       if (isStreaming) return null;
@@ -53,80 +60,151 @@ export const chart = defineComponent({
 
     // Pass only validated data to the chart library.
     const data = result.data;
+    const series = Array.isArray(data.series) ? data.series : [data.series];
+    const config: ChartConfig = Object.fromEntries(
+      series.map((series, index) => [
+        `series${index}`,
+        { label: series.name, color: `var(--chart-${index + 1})` },
+      ]),
+    );
     const rows = data.labels.map((label, index) => ({
       label,
       ...Object.fromEntries(
-        data.series.map((series, seriesIndex) => [seriesIndex, series.values[index]]),
+        series.map((series, seriesIndex) => [`series${seriesIndex}`, series.values[index] ?? null]),
       ),
     }));
 
     return (
-      <figure className="m-0 min-w-0 w-full">
-        <Heading level={3}>{data.title}</Heading>
-        <VStack className="h-88 text-sm">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <ComposedChart
-              data={rows}
-              accessibilityLayer
-              margin={{ top: 16, right: 16, bottom: 24, left: 16 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" label={{ value: data.xLabel, position: "bottom" }} />
-              <YAxis
-                width={70}
-                label={{ value: data.yLabel, angle: -90, position: "insideLeft" }}
-              />
-              <Tooltip />
-              <Legend verticalAlign="top" />
-              {data.series.map((series, index) =>
-                data.type === "line" ? (
-                  <Line
-                    key={index}
-                    dataKey={String(index)}
-                    name={series.name}
-                    stroke={colors[index]}
-                    isAnimationActive={false}
+      <figure className="m-0 min-w-0 w-full space-y-5" aria-label={data.title}>
+        <figcaption className="space-y-1">
+          <h3 className="text-base font-semibold tracking-tight">{data.title}</h3>
+          <p className="text-xs text-muted-foreground">{data.yLabel}</p>
+        </figcaption>
+        <ChartContainer config={config} className="h-64 w-full aspect-auto sm:h-72">
+          <ComposedChart
+            data={rows}
+            accessibilityLayer
+            margin={{ top: 8, right: 12, bottom: 8, left: 0 }}
+          >
+            <defs>
+              {series.map((_, index) => (
+                <linearGradient
+                  key={index}
+                  id={`${chartId}-fill-${index}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor={`var(--color-series${index})`} stopOpacity={0.2} />
+                  <stop
+                    offset="100%"
+                    stopColor={`var(--color-series${index})`}
+                    stopOpacity={0.02}
                   />
-                ) : (
-                  <Bar
-                    key={index}
-                    dataKey={String(index)}
-                    name={series.name}
-                    fill={colors[index]}
-                    isAnimationActive={false}
-                  />
-                ),
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
-        </VStack>
-        <details className="overflow-x-auto">
-          <summary className="cursor-pointer">
-            {data.xLabel} / {data.yLabel}
-          </summary>
-          <table className="data-table w-full border-collapse">
-            <caption>{data.title}</caption>
-            <thead>
-              <tr>
-                <th scope="col">{data.xLabel}</th>
-                {data.series.map((series, index) => (
-                  <th key={index} scope="col">
-                    {series.name} ({data.yLabel})
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.labels.map((label, index) => (
-                <tr key={index}>
-                  <th scope="row">{label}</th>
-                  {data.series.map((series, seriesIndex) => (
-                    <td key={seriesIndex}>{series.values[index] ?? "—"}</td>
-                  ))}
-                </tr>
+                </linearGradient>
               ))}
-            </tbody>
-          </table>
+            </defs>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={12}
+              minTickGap={32}
+            />
+            <YAxis
+              width={48}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={(value: number) =>
+                value.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 })
+              }
+            />
+            <ChartTooltip
+              cursor={
+                data.type === "bar"
+                  ? { fill: "var(--muted)", opacity: 0.5 }
+                  : { stroke: "var(--border)", strokeDasharray: "4 4" }
+              }
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(label) => (
+                    <>
+                      {data.xLabel}: {label}
+                    </>
+                  )}
+                />
+              }
+            />
+            <ChartLegend content={<ChartLegendContent className="flex-wrap pt-5" />} />
+            {series.map((series, index) =>
+              data.type === "line" ? (
+                <Area
+                  key={index}
+                  dataKey={`series${index}`}
+                  name={series.name}
+                  type="linear"
+                  stroke={`var(--color-series${index})`}
+                  strokeWidth={2.5}
+                  fill={`url(#${chartId}-fill-${index})`}
+                  fillOpacity={1}
+                  dot={rows.length === 1}
+                  activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--background)" }}
+                  connectNulls={false}
+                  isAnimationActive={false}
+                />
+              ) : (
+                <Bar
+                  key={index}
+                  dataKey={`series${index}`}
+                  name={series.name}
+                  fill={`var(--color-series${index})`}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={48}
+                  isAnimationActive={false}
+                />
+              ),
+            )}
+          </ComposedChart>
+        </ChartContainer>
+        <p className="text-center text-xs text-muted-foreground">{data.xLabel}</p>
+        <details className="group border-t pt-3">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-sm text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+            {data.xLabel} / {data.yLabel}
+            <ChevronDown
+              className="size-4 transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
+          <Table className="mt-3 text-xs tabular-nums">
+            <TableCaption className="text-xs">{data.title}</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">{data.xLabel}</TableHead>
+                {series.map((series, index) => (
+                  <TableHead key={index} scope="col" className="text-right">
+                    {series.name} ({data.yLabel})
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.labels.map((label, index) => (
+                <TableRow key={index}>
+                  <TableHead scope="row" className="font-normal">
+                    {label}
+                  </TableHead>
+                  {series.map((series, seriesIndex) => (
+                    <TableCell key={seriesIndex} className="text-right">
+                      {series.values[index]?.toLocaleString() ?? "—"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </details>
       </figure>
     );

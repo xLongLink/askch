@@ -5,12 +5,8 @@ import {
   useTriggerAction,
   type PromptOptions,
 } from "@openuidev/react-lang";
-import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
-import { Heading } from "@astryxdesign/core/Heading";
-import { Link } from "@astryxdesign/core/Link";
-import { Text } from "@astryxdesign/core/Text";
-import { VStack } from "@astryxdesign/core/VStack";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { z } from "zod/v4";
 import { chart } from "./Chart";
 import { map } from "./Map";
@@ -42,11 +38,7 @@ const text = defineComponent({
   props: textProps,
   component: ({ props }) => {
     const data = textProps.parse(props);
-    return (
-      <Text as="p" display="block">
-        {data.text}
-      </Text>
-    );
+    return <p className="leading-relaxed">{data.text}</p>;
   },
 });
 
@@ -56,7 +48,16 @@ const heading = defineComponent({
   props: headingProps,
   component: ({ props }) => {
     const data = headingProps.parse(props);
-    return <Heading level={data.level}>{data.text}</Heading>;
+    const Heading = `h${data.level}` as "h2" | "h3" | "h4";
+    return (
+      <Heading
+        className={
+          data.level === 2 ? "text-xl font-semibold tracking-tight" : "text-base font-semibold"
+        }
+      >
+        {data.text}
+      </Heading>
+    );
   },
 });
 
@@ -67,9 +68,14 @@ const link = defineComponent({
   component: ({ props }) => {
     const data = linkProps.parse(props);
     return (
-      <Link href={data.url} hasUnderline target="_blank" rel="noopener noreferrer">
+      <a
+        className="text-primary underline underline-offset-4 hover:text-primary/80"
+        href={data.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {data.label}
-      </Link>
+      </a>
     );
   },
 });
@@ -85,10 +91,13 @@ const followUp = defineComponent({
     const data = followUpProps.parse(props);
     return (
       <Button
-        label={data.label}
-        isDisabled={isStreaming}
+        variant="outline"
+        className="h-auto max-w-full justify-start whitespace-normal text-left"
+        disabled={isStreaming}
         onClick={() => triggerAction(data.message)}
-      />
+      >
+        {data.label}
+      </Button>
     );
   },
 });
@@ -117,7 +126,7 @@ const card = defineComponent({
     const children = childrenSchema.parse(props.children);
     return (
       <Card>
-        <VStack gap={3}>{renderNode(children)}</VStack>
+        <CardContent className="space-y-4">{renderNode(children)}</CardContent>
       </Card>
     );
   },
@@ -142,7 +151,7 @@ const stack = defineComponent({
   }),
   component: ({ props, renderNode }) => {
     const children = stackChildrenSchema.parse(props.children);
-    return <VStack gap={3}>{renderNode(children)}</VStack>;
+    return <section className="space-y-4">{renderNode(children)}</section>;
   },
 });
 
@@ -166,7 +175,7 @@ export const promptOptions: PromptOptions = {
     "Only Stack, Card, Heading, Text, Link, FollowUp, Chart, and Map are available. Stack contains at most 24 basic components or cards, never another Stack.",
     "Use Card only for discrete, self-contained items, not every section. Each Card contains at most 24 Heading, Text, Link, FollowUp, Chart, or Map components. Never nest cards or stacks inside a Card.",
     "Use Map for Swiss locations or canton comparisons using real tool results or user-supplied data only. Never invent coordinates or values. Provide a title, unit (empty for locations only), cantons, and markers; pass [] for unused layers. Canton codes must be unique official two-letter abbreviations. Null and omitted canton values are neutral gray, not zero. All canton values must share the same unit. Marker coordinates are WGS84 longitude/latitude inside Switzerland's bounding box. Localize labels and cite data sources with Link. The bundled canton boundaries are generalized historical outlines from 2016: do not use them to assert current administrative borders or for navigation.",
-    "Use Chart for trends (line) or comparisons (bar), using only data returned by tools or supplied by the user. Never invent chart values. Include units in axis labels and cite tool sources with Link when available. All series share the same unit and must have exactly one value per label; use null for missing values, not zero. Limit charts to 100 labels and 4 series. Localize titles, labels, and series names to the conversation language.",
+    'Use Chart for trends (line) or comparisons (bar), using only data returned by tools or supplied by the user. Never invent chart values. Include units in axis labels and cite tool sources with Link when available. Pass series as an array even for one series: [{name: "Temperature", values: [12, null]}]. All series share the same unit. Copy labels and values from the same source rows so they stay aligned; do not invent a full day of hour labels for a shorter forecast. Use null for missing values, not zero. Before emitting a chart, check that each series has one value per label. Limit charts to 100 labels and 4 series. Localize titles, labels, and series names to the conversation language.',
     "Use plain strings in Text and Heading. Link URLs must be HTTP(S), with no embedded credentials. Cite actual official sources, not invented URLs.",
     "FollowUp only suggests a message for the user to send. It cannot execute tools or perform other actions. Keep messages below 2000 characters.",
     "Do not use Query, Mutation, actions, reactive variables, functions, HTML, or executable code. Fetch real data using the agent's existing MCP tools before writing the response.",
