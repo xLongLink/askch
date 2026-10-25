@@ -24,15 +24,10 @@ function OpenUIBlock({
   const [invalid, setInvalid] = useState(false);
 
   // Bound parsing work and keep oversized generated output visible as escaped text.
-  if (code.length > 20000)
-    return (
-      <div className="openui-block">
-        <pre>{code}</pre>
-      </div>
-    );
+  if (code.length > 20000) return <pre className="max-h-80 overflow-x-auto">{code}</pre>;
 
   return (
-    <div className="openui-block">
+    <section>
       <Renderer
         library={library}
         response={code}
@@ -49,10 +44,10 @@ function OpenUIBlock({
       {invalid && !isStreaming && (
         <details>
           <summary>Some generated UI could not be displayed. View the original response.</summary>
-          <pre>{code}</pre>
+          <pre className="max-h-80 overflow-x-auto">{code}</pre>
         </details>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -80,7 +75,7 @@ export function AssistantMessage({
   }
 
   return (
-    <div className="assistant-message">
+    <article className="min-w-0 wrap-anywhere [&>*+*]:mt-4">
       {parts.map((part, index) =>
         part.type === "openui" ? (
           <OpenUIBlock
@@ -91,13 +86,13 @@ export function AssistantMessage({
             onSend={onSend}
           />
         ) : (
-          <div
+          <section
             key={index}
-            className="markdown"
+            className="markdown min-w-0 wrap-anywhere [&>*+*]:mt-4"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(marked.parser(part.tokens)) }}
           />
         ),
       )}
-    </div>
+    </article>
   );
 }

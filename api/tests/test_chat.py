@@ -1,6 +1,7 @@
 import json
 import httpx2
 import pytest
+from pydantic import ValidationError
 from src.settings import Settings
 from src.routes.chat import ERROR_MESSAGE
 from fastapi.testclient import TestClient
@@ -22,19 +23,16 @@ def events(response):
 
 
 def test_health(load_app):
-    """Check health without a configured provider key."""
-    app = load_app(settings(""))
+    """Check application health."""
+    app = load_app(settings())
     with TestClient(app) as client:
         assert client.get("/api/health").json() == {"status": "ok"}
 
 
-def test_missing_key(load_app):
-    """Reject chat when the provider key is missing."""
-    app = load_app(settings(""))
-    with TestClient(app) as client:
-        response = client.post("/api/chat", json={"messages": [message()]})
-        assert response.status_code == 503
-        assert response.json() == {"error": "Add INFOMANIAK_API_KEY to api/.env to start chatting."}
+def test_missing_key():
+    """Reject empty provider credentials at the settings boundary."""
+    with pytest.raises(ValidationError, match="INFOMANIAK_API_KEY"):
+        settings("")
 
 
 @pytest.mark.parametrize(

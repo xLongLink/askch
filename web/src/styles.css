@@ -1,7 +1,10 @@
-@layer reset, astryx-base, astryx-theme, app;
+@layer theme, reset, astryx-base, astryx-theme, app, utilities;
+@import "tailwindcss/theme.css" layer(theme);
 @import "@astryxdesign/core/reset.css";
 @import "@astryxdesign/core/astryx.css";
 @import "@astryxdesign/theme-neutral/theme.css";
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);
 
 @layer app {
   :root {
@@ -12,10 +15,6 @@
     text-rendering: optimizeLegibility;
   }
 
-  body {
-    margin: 0;
-  }
-
   .chat-page {
     --overlay-opacity: 60%;
     --font-family-body: Helvetica, Arial, sans-serif;
@@ -24,191 +23,38 @@
     --color-on-accent: #fff;
     --color-text-accent: #b00000;
     --color-icon-accent: #b00000;
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
     background-image:
       linear-gradient(
         rgb(253 252 251 / var(--overlay-opacity)),
         rgb(253 252 251 / var(--overlay-opacity))
       ),
       url("/mountains.jpg");
-    background-size: cover;
-    background-position: center;
   }
 
   .chat-page[data-has-messages="true"] {
     --overlay-opacity: 83%;
   }
 
-  .chat-main {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-  }
-
-  .chat-main.is-empty {
-    justify-content: center;
-  }
-
-  .conversation-scroll {
-    flex: 1;
-    overflow-y: auto;
-  }
-
   .conversation {
-    max-width: 48rem;
-    margin-inline: auto;
-    padding: 2rem 1.25rem;
     font-size: 0.9375rem;
     line-height: 1.75rem;
   }
 
-  .conversation > * + * {
-    margin-top: 2rem;
-  }
-
-  .user-message {
-    display: flex;
-    justify-content: flex-end;
-  }
-
   .message-bubble {
     max-width: 85%;
-    border-radius: 1rem;
-    padding: 0.75rem 1rem;
-    background: var(--color-background-muted);
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  .markdown,
-  .assistant-message {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .thinking {
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-  }
-
-  .composer-section {
-    width: 100%;
-    max-width: 48rem;
-    margin-inline: auto;
-    padding: 0.75rem 1.25rem 1rem;
-    flex-shrink: 0;
-  }
-
-  .greeting {
-    text-align: center;
   }
 
   .greeting span {
-    display: block;
-    margin-bottom: 1.5rem;
     font-size: 2.25rem;
   }
 
   .greeting h1 {
-    margin-bottom: 2rem;
     font-size: clamp(1.875rem, 5vw, 2.25rem);
-    font-weight: 500;
     line-height: 1.2;
-    letter-spacing: -0.025em;
   }
 
-  .chat-error {
-    margin-bottom: 0.75rem;
-  }
-
-  .composer {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-container);
-    background: var(--color-background-muted);
-  }
-
-  .composer:focus-within {
-    outline: 2px solid var(--color-text-secondary);
-    outline-offset: 2px;
-  }
-
-  .composer-input {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .composer-control {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    outline: none;
-  }
-
-  .composer textarea {
-    field-sizing: content;
-    max-height: 10rem;
-    resize: none;
-  }
-
-  .chat-footer {
-    flex-shrink: 0;
-    padding: 0 1rem 1rem;
-    color: #525252;
-    text-align: center;
-    font-size: 0.75rem;
-  }
-
-  .chat-footer a {
-    text-decoration: underline;
-  }
-  .markdown > * + * {
-    margin-top: 1rem;
-  }
-
-  .assistant-message > * + * {
-    margin-top: 1rem;
-  }
-
-  .openui-block pre {
-    overflow-x: auto;
-    max-height: 20rem;
-  }
-
-  .chart {
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-  }
-
-  .chart-plot {
-    height: 22rem;
-    font-size: 0.75rem;
-  }
-
-  .chart-data {
-    overflow-x: auto;
-  }
-
-  .chart-data summary {
-    cursor: pointer;
-  }
-
-  .chart-data table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .chart-data :is(th, td) {
-    border: 1px solid var(--color-border);
-    padding: 0.5rem 0.75rem;
-    text-align: left;
+  .map-scale {
+    background: linear-gradient(to right, hsl(210 65% 83%), hsl(210 65% 44%));
   }
 
   .markdown :is(h1, h2, h3, h4, h5, h6) {
@@ -281,7 +127,8 @@
     border-collapse: collapse;
   }
 
-  .markdown :is(th, td) {
+  .markdown :is(th, td),
+  .data-table :is(th, td) {
     border: 1px solid var(--color-border);
     padding: 0.5rem 0.75rem;
     text-align: left;

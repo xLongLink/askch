@@ -110,12 +110,6 @@ async def chat(
         trace.record("user message" if message.role == "user" else "assistant message", message.text)
     resources.push_async_callback(anyio.to_thread.run_sync, trace.save, settings.CHATS_DIR)
 
-    # Keep missing credentials separate from upstream provider errors.
-    if not settings.INFOMANIAK_API_KEY.get_secret_value():
-        trace.status = "error"
-        trace.record("error", "Provider API key is not configured.")
-        return JSONResponse({"error": "Add INFOMANIAK_API_KEY to api/.env to start chatting."}, status_code=503)
-
     # Reuse the application's HTTPX2 connection pool and timeout configuration.
     client = request.app.state.client
     provider = OpenAIProvider(base_url=str(client.base_url), api_key=settings.INFOMANIAK_API_KEY.get_secret_value(), http_client=client)

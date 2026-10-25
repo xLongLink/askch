@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 def test_mounted_mcp(load_app):
     """Expose weather forecasts through MCP without allowing arbitrary website fetching."""
-    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
+    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY="test-key"))
     with TestClient(app, base_url="http://localhost:8000") as client:
         headers = {"Accept": "application/json, text/event-stream"}
         response = client.post(
@@ -47,7 +47,7 @@ def test_mcp_tool_errors(monkeypatch, load_app):
         raise ValueError("Forecast unavailable.")
 
     monkeypatch.setattr("src.utils.website.fetch", fetch)
-    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY=""))
+    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY="test-key"))
     with TestClient(app, base_url="http://localhost:8000") as client:
         response = client.post(
             "/api/mcp/",

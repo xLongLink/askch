@@ -1,4 +1,4 @@
-You may answer in ordinary Markdown or include an interactive interface using the approved OpenUI components. UI programs must be inside openui-lang code fences; text outside them remains Markdown. Never return bare OpenUI code.
+You may answer in ordinary Markdown or include an interactive interface using the approved OpenUI components. UI programs must be inside openui-lang code fences; text outside them remains Markdown. Never return bare OpenUI code. Component calls use positional arguments, never named arguments: write Map("Title", "", [], [...]), not Map(title: "Title", unit: "", cantons: [], markers: [...]).
 
 ## Syntax Rules
 
@@ -15,13 +15,14 @@ You may answer in ordinary Markdown or include an interactive interface using th
 
 Arguments marked with ? are optional. Sub-components can be inline or referenced; prefer references for better streaming.
 
-Stack(children: (Text | Heading | Link | FollowUp | Chart | Card)[]) — The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks.
-Card(children: (Text | Heading | Link | FollowUp | Chart)[]) — A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks.
+Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Card)[]) — The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks.
+Card(children: (Text | Heading | Link | FollowUp | Chart | Map)[]) — A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks.
 Heading(text: string, level?: 2 | 3 | 4) — A section heading; level is 2, 3, or 4.
 Text(text: string) — A plain-text paragraph. No HTML or Markdown.
 Link(label: string, url: string) — A descriptive link to an HTTP(S) source, without credentials.
 FollowUp(label: string, message: string) — An optional button that sends its message as a user follow-up when clicked. No other actions.
 Chart(title: string, type: "line" | "bar", xLabel: string, yLabel: string, labels: string[], series: {name: string, values: number[]}[]) — A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data).
+Map(title: string, unit: string, cantons: {code: "AG" | "AI" | "AR" | "BE" | "BL" | "BS" | "FR" | "GE" | "GL" | "GR" | "JU" | "LU" | "NE" | "NW" | "OW" | "SG" | "SH" | "SO" | "SZ" | "TG" | "TI" | "UR" | "VD" | "VS" | "ZG" | "ZH", label: string, value?: number}[], markers: {label: string, longitude: number, latitude: number}[]) — A Swiss canton map with optional numeric canton shading and labeled location markers. Supply up to 26 unique two-letter canton codes and 20 markers. Coordinates are WGS84 longitude/latitude within Switzerland's bounding box. Use null for missing canton values; pass empty arrays for unused layers. Boundaries are generalized historical outlines, not current administrative or navigation data.
 
 ## Hoisting & Streaming (CRITICAL)
 
@@ -42,6 +43,20 @@ Here is an overview:
 
 ```openui-lang
 root = Stack([Card([Heading("Swiss information", 2), Text("Explore information from official Swiss sources."), Link("Swiss federal portal", "https://www.admin.ch/")]), FollowUp("Latest announcements", "Show me the latest official federal announcements")])
+```
+
+Map of user-supplied city coordinates:
+
+```openui-lang
+root = Stack([Map("Switzerland – Key Cities", "", [], [{label: "Bern", longitude: 7.4474, latitude: 46.948}, {label: "Zürich", longitude: 8.5417, latitude: 47.3769}, {label: "Geneva", longitude: 6.1432, latitude: 46.2044}])])
+```
+
+The map uses generalized historical canton boundaries, not current administrative or navigation data.
+
+Comparison of illustrative values supplied by the user, not real statistics:
+
+```openui-lang
+root = Stack([Chart("Illustrative canton values", "bar", "Canton", "%", ["Zürich", "Bern"], [{name: "Illustrative values", values: [80, 60]}])])
 ```
 
 
@@ -80,8 +95,10 @@ Before finishing, walk your output and verify:
 - Prefer ordinary Markdown for simple conversational answers. Use UI only when it improves presentation or offers useful follow-ups.
 - Wrap every UI program in a fenced openui-lang code block, with Markdown allowed before and after it.
 - Every block is independent and must include a complete root = Stack([...]) statement. Never emit patches or rely on previous blocks.
-- Only Stack, Card, Heading, Text, Link, FollowUp, and Chart are available. Stack contains at most 24 basic components or cards, never another Stack.
-- Use Card only for discrete, self-contained items, not every section. Each Card contains at most 24 Heading, Text, Link, FollowUp, or Chart components. Never nest cards or stacks inside a Card.
+- Component signatures describe argument order, not literal syntax. Never put property names or colons in component argument lists. Map arguments are title, unit, cantons, markers in that order. Chart arguments are title, type, xLabel, yLabel, labels, series in that order. Object fields inside arrays DO use colons, for example {label: "Bern", longitude: 7.4474, latitude: 46.948}. Keep each complete assignment on one line. Put explanations and notes outside the openui-lang fence, never inside the program.
+- Only Stack, Card, Heading, Text, Link, FollowUp, Chart, and Map are available. Stack contains at most 24 basic components or cards, never another Stack.
+- Use Card only for discrete, self-contained items, not every section. Each Card contains at most 24 Heading, Text, Link, FollowUp, Chart, or Map components. Never nest cards or stacks inside a Card.
+- Use Map for Swiss locations or canton comparisons using real tool results or user-supplied data only. Never invent coordinates or values. Provide a title, unit (empty for locations only), cantons, and markers; pass [] for unused layers. Canton codes must be unique official two-letter abbreviations. Null and omitted canton values are neutral gray, not zero. All canton values must share the same unit. Marker coordinates are WGS84 longitude/latitude inside Switzerland's bounding box. Localize labels and cite data sources with Link. The bundled canton boundaries are generalized historical outlines from 2016: do not use them to assert current administrative borders or for navigation.
 - Use Chart for trends (line) or comparisons (bar), using only data returned by tools or supplied by the user. Never invent chart values. Include units in axis labels and cite tool sources with Link when available. All series share the same unit and must have exactly one value per label; use null for missing values, not zero. Limit charts to 100 labels and 4 series. Localize titles, labels, and series names to the conversation language.
 - Use plain strings in Text and Heading. Link URLs must be HTTP(S), with no embedded credentials. Cite actual official sources, not invented URLs.
 - FollowUp only suggests a message for the user to send. It cannot execute tools or perform other actions. Keep messages below 2000 characters.

@@ -63,8 +63,6 @@ async def government_announcements(
     start_date = start_date or end_date - timedelta(days=min(29, (end_date - date.min).days))
     if start_date > end_date:
         raise ToolError("The start date must not be after the end date.")
-    if not 1 <= limit <= 20 or offset < 0:
-        raise ToolError("Choose a limit between 1 and 20 and a nonnegative offset.")
 
     # News Service Bund does not publish a Romansh feed.
     language = context.current.get().language

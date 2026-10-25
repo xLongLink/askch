@@ -20,8 +20,8 @@ def frontend_dir(tmp_path):
 
 @pytest.fixture
 def client(frontend_dir, load_app):
-    """Start the application with a bundled frontend and no provider key."""
-    settings = Settings(_env_file=None, INFOMANIAK_API_KEY="")
+    """Start the application with a bundled frontend and test credentials."""
+    settings = Settings(_env_file=None, INFOMANIAK_API_KEY="test-key")
     app = load_app(settings)
     with TestClient(app, base_url="http://localhost:8000") as client:
         yield client
@@ -106,7 +106,7 @@ def test_chat_stream_with_frontend(frontend_dir, load_app):
 
 def test_frontend_is_optional(load_app):
     """Keep the API available when no frontend build is bundled."""
-    app = load_app(Settings(_env_file=None))
+    app = load_app(Settings(_env_file=None, INFOMANIAK_API_KEY="test-key"))
     with TestClient(app) as client:
         assert client.get("/", headers={"Accept": "text/html"}).status_code == 404
         assert client.get("/api/health").status_code == 200
@@ -116,7 +116,7 @@ def test_missing_index_fails(tmp_path, load_app):
     """Reject a bundled frontend without its entry point."""
     (tmp_path / "web").mkdir()
     with pytest.raises(RuntimeError, match="fallback file"):
-        load_app(Settings(_env_file=None))
+        load_app(Settings(_env_file=None, INFOMANIAK_API_KEY="test-key"))
 
 
 def test_no_files_outside_frontend(client, frontend_dir):

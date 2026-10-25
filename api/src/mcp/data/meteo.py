@@ -26,10 +26,6 @@ async def meteo(
     Attribute forecast data to MeteoSwiss (CC-BY).
     """
 
-    # Validate the forecast range before contacting MeteoSwiss.
-    if parameter not in PARAMETERS or not 1 <= hours <= 192:
-        raise ToolError("Choose temperature, precipitation, or wind and between 1 and 192 hours.")
-
     # Bound the complete lookup as well as individual network requests.
     async with asyncio.timeout(60):
         response = await website.fetch(f"{DATA}ogd-local-forecasting_meta_point.csv")

@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # Configure the Infomaniak model and credentials.
     INFOMANIAK_MODEL: str = "swiss-ai/Apertus-v1.5-70B"
-    INFOMANIAK_API_KEY: SecretStr = SecretStr("")
+    INFOMANIAK_API_KEY: SecretStr = Field(min_length=1)
     INFOMANIAK_PRODUCT_ID: str = Field(default="112804", pattern=r"^\d+$")
 
 

@@ -4,7 +4,10 @@ import { useChat } from "@ai-sdk/react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { IconButton } from "@astryxdesign/core/IconButton";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
+import { VStack } from "@astryxdesign/core/VStack";
 import { ArrowUp, CircleAlert, Square } from "lucide-react";
 import { AssistantMessage } from "./Assistant";
 
@@ -69,11 +72,26 @@ export function App() {
   }
 
   return (
-    <div className="chat-page" data-has-messages={messages.length > 0}>
-      <main className={messages.length === 0 ? "chat-main is-empty" : "chat-main"}>
+    <VStack
+      className="chat-page h-dvh bg-cover bg-center"
+      data-has-messages={String(messages.length > 0)}
+    >
+      <VStack
+        as="main"
+        className="min-h-0 flex-1"
+        vAlign={messages.length === 0 ? "center" : "start"}
+      >
         {messages.length > 0 && (
-          <div className="conversation-scroll">
-            <div className="conversation" role="log" aria-label="Conversation" aria-live="polite">
+          <VStack className="flex-1 overflow-y-auto">
+            <VStack
+              className="conversation mx-auto w-full max-w-3xl shrink-0"
+              gap={8}
+              paddingInline={5}
+              paddingBlock={8}
+              role="log"
+              aria-label="Conversation"
+              aria-live="polite"
+            >
               {messages.map((message) => {
                 const text = message.parts
                   .filter((part) => part.type === "text")
@@ -81,9 +99,14 @@ export function App() {
                   .join("");
                 if (message.role === "user") {
                   return (
-                    <div className="user-message" key={message.id}>
-                      <div className="message-bubble">{text}</div>
-                    </div>
+                    <HStack hAlign="end" key={message.id}>
+                      <Text
+                        type="inherit"
+                        className="message-bubble rounded-2xl bg-muted px-4 py-3 whitespace-pre-wrap wrap-anywhere"
+                      >
+                        {text}
+                      </Text>
+                    </HStack>
                   );
                 }
                 if (message.role === "assistant" && text) {
@@ -104,26 +127,40 @@ export function App() {
                 return null;
               })}
               {status === "submitted" && (
-                <p className="thinking" role="status">
+                <Text as="p" type="inherit" className="text-base text-secondary" role="status">
                   Thinking…
-                </p>
+                </Text>
               )}
-              <div ref={messagesEnd} />
-            </div>
-          </div>
+              <VStack ref={messagesEnd} />
+            </VStack>
+          </VStack>
         )}
 
-        <div className="composer-section">
+        <VStack
+          className="mx-auto w-full max-w-3xl shrink-0"
+          paddingInline={5}
+          paddingBlockStart={3}
+          paddingBlockEnd={4}
+        >
           {messages.length === 0 && (
-            <div className="greeting">
-              <span role="img" aria-label="Swiss flag">
+            <VStack className="greeting text-center">
+              <Text
+                type="inherit"
+                display="block"
+                justify="center"
+                className="mb-6"
+                role="img"
+                aria-label="Swiss flag"
+              >
                 🇨🇭
-              </span>
-              <h1 lang={greeting.lang}>{greeting.text}</h1>
-            </div>
+              </Text>
+              <h1 className="mb-8 font-medium tracking-tight" lang={greeting.lang}>
+                {greeting.text}
+              </h1>
+            </VStack>
           )}
           {error && (
-            <div className="chat-error" role="alert">
+            <VStack className="mb-3" role="alert">
               <Banner
                 status="error"
                 title="Unable to get a response"
@@ -141,10 +178,10 @@ export function App() {
                   />
                 }
               />
-            </div>
+            </VStack>
           )}
           <form
-            className="composer"
+            className="flex items-end gap-2 rounded-lg border border-border bg-muted p-2 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-secondary"
             onSubmit={async (event) => {
               event.preventDefault();
               await send();
@@ -158,8 +195,8 @@ export function App() {
               onChange={setInput}
               rows={1}
               size="lg"
-              containerClassName="composer-input"
-              controlClassName="composer-control"
+              containerClassName="min-w-0 flex-1"
+              controlClassName="border-0 bg-transparent shadow-none outline-none [&_textarea]:max-h-40 [&_textarea]:field-sizing-content [&_textarea]:resize-none"
               onKeyDown={async (event) => {
                 if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                   event.preventDefault();
@@ -187,12 +224,12 @@ export function App() {
               />
             )}
           </form>
-        </div>
-      </main>
-      <footer className="chat-footer">
+        </VStack>
+      </VStack>
+      <footer className="shrink-0 px-4 pb-4 text-center text-sm text-secondary [&_a]:underline">
         AI can make mistakes · <a href="https://github.com/xLongLink/askch">Open Source</a> ·
         Created by <a href="https://www.linkedin.com/company/longlink">LongLink SAGL</a>
       </footer>
-    </div>
+    </VStack>
   );
 }

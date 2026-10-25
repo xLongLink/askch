@@ -1,5 +1,6 @@
 import { defineComponent } from "@openuidev/react-lang";
 import { Heading } from "@astryxdesign/core/Heading";
+import { VStack } from "@astryxdesign/core/VStack";
 import {
   Bar,
   CartesianGrid,
@@ -52,9 +53,9 @@ export const chart = defineComponent({
     }));
 
     return (
-      <figure className="chart">
+      <figure className="m-0 min-w-0 w-full">
         <Heading level={3}>{data.title}</Heading>
-        <div className="chart-plot">
+        <VStack className="h-88 text-sm">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <ComposedChart
               data={rows}
@@ -90,12 +91,12 @@ export const chart = defineComponent({
               )}
             </ComposedChart>
           </ResponsiveContainer>
-        </div>
-        <details className="chart-data">
-          <summary>
+        </VStack>
+        <details className="overflow-x-auto">
+          <summary className="cursor-pointer">
             {data.xLabel} / {data.yLabel}
           </summary>
-          <table>
+          <table className="data-table w-full border-collapse">
             <caption>{data.title}</caption>
             <thead>
               <tr>

@@ -2,11 +2,11 @@
   "root": "Stack",
   "components": {
     "Stack": {
-      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Card)[])",
+      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Card)[])",
       "description": "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks."
     },
     "Card": {
-      "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart)[])",
+      "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart | Map)[])",
       "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
     },
     "Heading": {
@@ -28,6 +28,10 @@
     "Chart": {
       "signature": "Chart(title: string, type: \"line\" | \"bar\", xLabel: string, yLabel: string, labels: string[], series: {name: string, values: number[]}[])",
       "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data)."
+    },
+    "Map": {
+      "signature": "Map(title: string, unit: string, cantons: {code: \"AG\" | \"AI\" | \"AR\" | \"BE\" | \"BL\" | \"BS\" | \"FR\" | \"GE\" | \"GL\" | \"GR\" | \"JU\" | \"LU\" | \"NE\" | \"NW\" | \"OW\" | \"SG\" | \"SH\" | \"SO\" | \"SZ\" | \"TG\" | \"TI\" | \"UR\" | \"VD\" | \"VS\" | \"ZG\" | \"ZH\", label: string, value?: number}[], markers: {label: string, longitude: number, latitude: number}[])",
+      "description": "A Swiss canton map with optional numeric canton shading and labeled location markers. Supply up to 26 unique two-letter canton codes and 20 markers. Coordinates are WGS84 longitude/latitude within Switzerland's bounding box. Use null for missing canton values; pass empty arrays for unused layers. Boundaries are generalized historical outlines, not current administrative or navigation data."
     }
   },
   "schema": {
@@ -54,6 +58,9 @@
       },
       "Chart": {
         "$ref": "#/$defs/Chart"
+      },
+      "Map": {
+        "$ref": "#/$defs/Map"
       }
     },
     "required": [
@@ -63,7 +70,8 @@
       "Text",
       "Link",
       "FollowUp",
-      "Chart"
+      "Chart",
+      "Map"
     ],
     "additionalProperties": false,
     "$defs": {
@@ -89,6 +97,9 @@
                 },
                 {
                   "$ref": "#/$defs/Chart"
+                },
+                {
+                  "$ref": "#/$defs/Map"
                 },
                 {
                   "$ref": "#/$defs/Card"
@@ -270,6 +281,115 @@
         "additionalProperties": false,
         "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data)."
       },
+      "Map": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "cantons": {
+            "maxItems": 26,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "AG",
+                    "AI",
+                    "AR",
+                    "BE",
+                    "BL",
+                    "BS",
+                    "FR",
+                    "GE",
+                    "GL",
+                    "GR",
+                    "JU",
+                    "LU",
+                    "NE",
+                    "NW",
+                    "OW",
+                    "SG",
+                    "SH",
+                    "SO",
+                    "SZ",
+                    "TG",
+                    "TI",
+                    "UR",
+                    "VD",
+                    "VS",
+                    "ZG",
+                    "ZH"
+                  ]
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "code",
+                "label",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "markers": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "longitude": {
+                  "type": "number",
+                  "minimum": 5.9,
+                  "maximum": 10.6
+                },
+                "latitude": {
+                  "type": "number",
+                  "minimum": 45.8,
+                  "maximum": 47.9
+                }
+              },
+              "required": [
+                "label",
+                "longitude",
+                "latitude"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "title",
+          "unit",
+          "cantons",
+          "markers"
+        ],
+        "additionalProperties": false,
+        "description": "A Swiss canton map with optional numeric canton shading and labeled location markers. Supply up to 26 unique two-letter canton codes and 20 markers. Coordinates are WGS84 longitude/latitude within Switzerland's bounding box. Use null for missing canton values; pass empty arrays for unused layers. Boundaries are generalized historical outlines, not current administrative or navigation data."
+      },
       "Card": {
         "type": "object",
         "properties": {
@@ -292,6 +412,9 @@
                 },
                 {
                   "$ref": "#/$defs/Chart"
+                },
+                {
+                  "$ref": "#/$defs/Map"
                 }
               ]
             }
