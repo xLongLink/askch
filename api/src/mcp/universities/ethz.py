@@ -1,3 +1,9 @@
+"""ETH Zurich — https://ethz.ch/en.html.
+
+Existing tools cover events. Possible additions include degree programmes,
+course catalogues, admissions, research projects, and publications.
+"""
+
 import asyncio
 from typing import Literal, Annotated
 from datetime import date, datetime
