@@ -1,0 +1,32 @@
+from enum import StrEnum
+
+
+class Cantons(StrEnum):
+    """Map Switzerland's 26 cantons to their official abbreviations."""
+
+    ZURICH = "ZH"
+    BERN = "BE"
+    LUCERNE = "LU"
+    URI = "UR"
+    SCHWYZ = "SZ"
+    OBWALDEN = "OW"
+    NIDWALDEN = "NW"
+    GLARUS = "GL"
+    ZUG = "ZG"
+    FRIBOURG = "FR"
+    SOLOTHURN = "SO"
+    BASEL_STADT = "BS"
+    BASEL_LANDSCHAFT = "BL"
+    SCHAFFHAUSEN = "SH"
+    APPENZELL_AUSSERRHODEN = "AR"
+    APPENZELL_INNERRHODEN = "AI"
+    ST_GALLEN = "SG"
+    GRAUBUNDEN = "GR"
+    AARGAU = "AG"
+    THURGAU = "TG"
+    TICINO = "TI"
+    VAUD = "VD"
+    VALAIS = "VS"
+    NEUCHATEL = "NE"
+    GENEVA = "GE"
+    JURA = "JU"

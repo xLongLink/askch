@@ -12,6 +12,7 @@ import { Link } from "@astryxdesign/core/Link";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { z } from "zod/v4";
+import { chart } from "./Chart";
 
 const textProps = z.object({ text: z.string().max(10000) });
 const headingProps = z.object({
@@ -96,7 +97,7 @@ const childrenSchema = z
   .array(
     z.object({
       type: z.literal("element"),
-      typeName: z.enum(["Text", "Heading", "Link", "FollowUp"]),
+      typeName: z.enum(["Text", "Heading", "Link", "FollowUp", "Chart"]),
       props: z.record(z.string(), z.unknown()),
     }),
   )
@@ -107,7 +108,7 @@ const card = defineComponent({
   description:
     "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks.",
   props: z.object({
-    children: z.array(z.union([text.ref, heading.ref, link.ref, followUp.ref])).max(24),
+    children: z.array(z.union([text.ref, heading.ref, link.ref, followUp.ref, chart.ref])).max(24),
   }),
   component: ({ props, renderNode }) => {
     const children = childrenSchema.parse(props.children);
@@ -122,7 +123,7 @@ const card = defineComponent({
 const stackChildrenSchema = z
   .array(
     childrenSchema.element.extend({
-      typeName: z.enum(["Text", "Heading", "Link", "FollowUp", "Card"]),
+      typeName: z.enum(["Text", "Heading", "Link", "FollowUp", "Chart", "Card"]),
     }),
   )
   .max(24);
@@ -132,7 +133,9 @@ const stack = defineComponent({
   description:
     "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks.",
   props: z.object({
-    children: z.array(z.union([text.ref, heading.ref, link.ref, followUp.ref, card.ref])).max(24),
+    children: z
+      .array(z.union([text.ref, heading.ref, link.ref, followUp.ref, chart.ref, card.ref]))
+      .max(24),
   }),
   component: ({ props, renderNode }) => {
     const children = stackChildrenSchema.parse(props.children);
@@ -143,7 +146,7 @@ const stack = defineComponent({
 // Keep the renderer and generated model instructions on the same component contract.
 export const library = createLibrary({
   root: "Stack",
-  components: [stack, card, heading, text, link, followUp],
+  components: [stack, card, heading, text, link, followUp, chart],
 });
 export const promptOptions: PromptOptions = {
   preamble:
@@ -156,8 +159,9 @@ export const promptOptions: PromptOptions = {
     "Prefer ordinary Markdown for simple conversational answers. Use UI only when it improves presentation or offers useful follow-ups.",
     "Wrap every UI program in a fenced openui-lang code block, with Markdown allowed before and after it.",
     "Every block is independent and must include a complete root = Stack([...]) statement. Never emit patches or rely on previous blocks.",
-    "Only Stack, Card, Heading, Text, Link, and FollowUp are available. Stack contains at most 24 basic components or cards, never another Stack.",
-    "Use Card only for discrete, self-contained items, not every section. Each Card contains at most 24 Heading, Text, Link, or FollowUp components. Never nest cards or stacks inside a Card.",
+    "Only Stack, Card, Heading, Text, Link, FollowUp, and Chart are available. Stack contains at most 24 basic components or cards, never another Stack.",
+    "Use Card only for discrete, self-contained items, not every section. Each Card contains at most 24 Heading, Text, Link, FollowUp, or Chart components. Never nest cards or stacks inside a Card.",
+    "Use Chart for trends (line) or comparisons (bar), using only data returned by tools or supplied by the user. Never invent chart values. Include units in axis labels and cite tool sources with Link when available. All series share the same unit and must have exactly one value per label; use null for missing values, not zero. Limit charts to 100 labels and 4 series. Localize titles, labels, and series names to the conversation language.",
     "Use plain strings in Text and Heading. Link URLs must be HTTP(S), with no embedded credentials. Cite actual official sources, not invented URLs.",
     "FollowUp only suggests a message for the user to send. It cannot execute tools or perform other actions. Keep messages below 2000 characters.",
     "Do not use Query, Mutation, actions, reactive variables, functions, HTML, or executable code. Fetch real data using the agent's existing MCP tools before writing the response.",

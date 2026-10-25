@@ -2,11 +2,11 @@
   "root": "Stack",
   "components": {
     "Stack": {
-      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Card)[])",
+      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Card)[])",
       "description": "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks."
     },
     "Card": {
-      "signature": "Card(children: (Text | Heading | Link | FollowUp)[])",
+      "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart)[])",
       "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
     },
     "Heading": {
@@ -24,6 +24,10 @@
     "FollowUp": {
       "signature": "FollowUp(label: string, message: string)",
       "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
+    },
+    "Chart": {
+      "signature": "Chart(title: string, type: \"line\" | \"bar\", xLabel: string, yLabel: string, labels: string[], series: {name: string, values: number[]}[])",
+      "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data)."
     }
   },
   "schema": {
@@ -47,6 +51,9 @@
       },
       "FollowUp": {
         "$ref": "#/$defs/FollowUp"
+      },
+      "Chart": {
+        "$ref": "#/$defs/Chart"
       }
     },
     "required": [
@@ -55,7 +62,8 @@
       "Heading",
       "Text",
       "Link",
-      "FollowUp"
+      "FollowUp",
+      "Chart"
     ],
     "additionalProperties": false,
     "$defs": {
@@ -78,6 +86,9 @@
                 },
                 {
                   "$ref": "#/$defs/FollowUp"
+                },
+                {
+                  "$ref": "#/$defs/Chart"
                 },
                 {
                   "$ref": "#/$defs/Card"
@@ -181,6 +192,84 @@
         "additionalProperties": false,
         "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
       },
+      "Chart": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "line",
+              "bar"
+            ]
+          },
+          "xLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "yLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "labels": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "series": {
+            "minItems": 1,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "values": {
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "values"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "xLabel",
+          "yLabel",
+          "labels",
+          "series"
+        ],
+        "additionalProperties": false,
+        "description": "A line or bar chart of real data. Include axis labels and units. Supply 1–100 labels and 1–4 named series, each with one numeric value per label (null for missing data)."
+      },
       "Card": {
         "type": "object",
         "properties": {
@@ -200,6 +289,9 @@
                 },
                 {
                   "$ref": "#/$defs/FollowUp"
+                },
+                {
+                  "$ref": "#/$defs/Chart"
                 }
               ]
             }

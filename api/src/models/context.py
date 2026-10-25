@@ -1,5 +1,5 @@
-from typing import Literal
 from pydantic import BaseModel, ConfigDict
+from src.models.languages import Languages
 
 
 class ChatContext(BaseModel):
@@ -8,4 +8,4 @@ class ChatContext(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     # Default API clients without a UI language to English.
-    language: Literal["de", "fr", "it", "rm", "en"] = "en"
+    language: Languages = Languages.ENGLISH

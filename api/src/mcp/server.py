@@ -1,5 +1,6 @@
-from src.mcp import meteo, errors
+from src.mcp import errors
 from mcp.server import MCPServer
+from src.mcp.data import meteo
 from src.mcp.government import announcement
 
 # Configure the internal MCP server and its official Swiss data tools.
