@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DefaultChatTransport } from "ai";
 import { useChat } from "@ai-sdk/react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { TextArea } from "@astryxdesign/core/TextArea";
 import { ArrowUp, CircleAlert, Square } from "lucide-react";
-import { marked } from "marked";
-import sanitizeHtml from "sanitize-html";
+import { AssistantMessage } from "./Assistant";
 
 const defaultGreeting = { languages: ["en"], lang: "en", text: "Hello! Welcome." };
 const greetings = [
@@ -18,8 +18,30 @@ const greetings = [
 ];
 
 export function App() {
+  // Fix the initial UI language for the lifetime of this conversation.
+  const [greeting] = useState(() => {
+    const languages = navigator.languages.length ? navigator.languages : [navigator.language];
+    return (
+      languages
+        .map((locale) =>
+          greetings.find((candidate) =>
+            candidate.languages.includes(locale.toLowerCase().split("-")[0]),
+          ),
+        )
+        .find((candidate) => candidate !== undefined) ?? defaultGreeting
+    );
+  });
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        body: { context: { language: greeting.lang.split("-")[0] } },
+      }),
+    [greeting],
+  );
+
   // Keep the SDK conversation ID stable across turns and handle transient tool errors.
   const { messages, status, error, sendMessage, clearError, regenerate, stop } = useChat({
+    transport,
     onData: ({ type }) => {
       if (type === "data-tool-error") console.error("[Chat] Tool call failed.");
     },
@@ -30,17 +52,6 @@ export function App() {
   const [input, setInput] = useState("");
   const messagesEnd = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
-
-  // Use language preferences as a regional hint without requesting location.
-  const languages = navigator.languages.length ? navigator.languages : [navigator.language];
-  const greeting =
-    languages
-      .map((locale) =>
-        greetings.find((candidate) =>
-          candidate.languages.includes(locale.toLowerCase().split("-")[0]),
-        ),
-      )
-      .find((candidate) => candidate !== undefined) ?? defaultGreeting;
 
   // Synchronize the scroll position with streamed content and request status.
   useEffect(() => {
@@ -77,11 +88,15 @@ export function App() {
                 }
                 if (message.role === "assistant" && text) {
                   return (
-                    <div
+                    <AssistantMessage
                       key={message.id}
-                      className="markdown"
-                      dangerouslySetInnerHTML={{
-                        __html: sanitizeHtml(marked.parse(text, { async: false })),
+                      content={text}
+                      isStreaming={status === "streaming" && message.id === messages.at(-1)?.id}
+                      busy={busy}
+                      onSend={async (text) => {
+                        if (busy) return;
+                        clearError();
+                        await sendMessage({ text });
                       }}
                     />
                   );

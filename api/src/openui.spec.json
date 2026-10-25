@@ -1,0 +1,216 @@
+{
+  "root": "Stack",
+  "components": {
+    "Stack": {
+      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Card)[])",
+      "description": "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks."
+    },
+    "Card": {
+      "signature": "Card(children: (Text | Heading | Link | FollowUp)[])",
+      "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
+    },
+    "Heading": {
+      "signature": "Heading(text: string, level?: 2 | 3 | 4)",
+      "description": "A section heading; level is 2, 3, or 4."
+    },
+    "Text": {
+      "signature": "Text(text: string)",
+      "description": "A plain-text paragraph. No HTML or Markdown."
+    },
+    "Link": {
+      "signature": "Link(label: string, url: string)",
+      "description": "A descriptive link to an HTTP(S) source, without credentials."
+    },
+    "FollowUp": {
+      "signature": "FollowUp(label: string, message: string)",
+      "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
+    }
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "Stack": {
+        "$ref": "#/$defs/Stack"
+      },
+      "Card": {
+        "$ref": "#/$defs/Card"
+      },
+      "Heading": {
+        "$ref": "#/$defs/Heading"
+      },
+      "Text": {
+        "$ref": "#/$defs/Text"
+      },
+      "Link": {
+        "$ref": "#/$defs/Link"
+      },
+      "FollowUp": {
+        "$ref": "#/$defs/FollowUp"
+      }
+    },
+    "required": [
+      "Stack",
+      "Card",
+      "Heading",
+      "Text",
+      "Link",
+      "FollowUp"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "Stack": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "maxItems": 24,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "$ref": "#/$defs/Heading"
+                },
+                {
+                  "$ref": "#/$defs/Link"
+                },
+                {
+                  "$ref": "#/$defs/FollowUp"
+                },
+                {
+                  "$ref": "#/$defs/Card"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "children"
+        ],
+        "additionalProperties": false,
+        "description": "The root vertical layout, containing at most 24 basic components or cards. Do not nest stacks."
+      },
+      "Text": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false,
+        "description": "A plain-text paragraph. No HTML or Markdown."
+      },
+      "Heading": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "level": {
+            "default": 2,
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              }
+            ]
+          }
+        },
+        "required": [
+          "text",
+          "level"
+        ],
+        "additionalProperties": false,
+        "description": "A section heading; level is 2, 3, or 4."
+      },
+      "Link": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "additionalProperties": false,
+        "description": "A descriptive link to an HTTP(S) source, without credentials."
+      },
+      "FollowUp": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "label",
+          "message"
+        ],
+        "additionalProperties": false,
+        "description": "An optional button that sends its message as a user follow-up when clicked. No other actions."
+      },
+      "Card": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "maxItems": 24,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "$ref": "#/$defs/Heading"
+                },
+                {
+                  "$ref": "#/$defs/Link"
+                },
+                {
+                  "$ref": "#/$defs/FollowUp"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "children"
+        ],
+        "additionalProperties": false,
+        "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
+      }
+    }
+  }
+}

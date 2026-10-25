@@ -11,8 +11,10 @@ class Settings(BaseSettings):
     # Store chat traces locally until a remote storage backend is configured.
     CHATS_DIR: Path = Path(".chats")
 
-    # Load the default system instructions from the packaged prompt file.
-    SYSTEM_PROMPT: str = Path(__file__).with_name("SYSTEM.md").read_text(encoding="utf-8").strip()
+    # Load chat guidance and the generated component contract from packaged prompt files.
+    SYSTEM_PROMPT: str = "\n\n".join(
+        Path(__file__).with_name(name).read_text(encoding="utf-8").strip() for name in ("SYSTEM.md", "openui.txt")
+    )
 
     # Configure the Infomaniak model and credentials.
     INFOMANIAK_MODEL: str = "swiss-ai/Apertus-v1.5-70B"
