@@ -87,35 +87,44 @@ class EventResults(BaseModel):
     offset: int
 
 
-async def _catalogs() -> tuple[list[FilterOptions], list[FilterOptions]]:
-    """Load validated event type and location catalogs from ETH Zurich."""
+async def _catalog(category: Literal["types", "locations"], *, needed: bool) -> list[FilterOptions]:
+    """Load an event filter catalog only when the caller needs it."""
 
-    # Fetch independent filter catalogs used by the official event search.
-    types, locations = await asyncio.gather(
-        website.fetch("https://idapps.ethz.ch/pcm-pub-services/v2/entry-types", params={"lang": "en", "client-id": "wcms", "cal": 1}),
-        website.fetch("https://idapps.ethz.ch/domains-services/v1/locations/areas", params={"lang": "en", "client-id": "wcms"}),
-    )
-    return (
-        [FilterOptions.model_validate(option) for option in types.json()["entry-type-array"]],
-        [FilterOptions.model_validate(option) for option in locations.json()["area-array"]],
-    )
+    # Skip unused catalogs so unrelated services cannot fail the requested lookup.
+    if not needed:
+        return []
+
+    # Fetch and validate the requested catalog from its public endpoint.
+    if category == "types":
+        response = await website.fetch(
+            "https://idapps.ethz.ch/pcm-pub-services/v2/entry-types", params={"lang": "en", "client-id": "wcms", "cal": 1}
+        )
+        options = response.json()["entry-type-array"]
+    else:
+        response = await website.fetch(
+            "https://idapps.ethz.ch/domains-services/v1/locations/areas", params={"lang": "en", "client-id": "wcms"}
+        )
+        options = response.json()["area-array"]
+    return [FilterOptions.model_validate(option) for option in options]
 
 
 async def ethz_event_filters(
     category: Annotated[
         Literal["all", "types", "locations", "departments", "accessibility"],
         Field(description="Filter category to list. Use all to discover every available filter."),
-    ],
+    ] = "all",
 ) -> EventFilters:
     """List readable filter names accepted by ethz_events; no numeric IDs or codes are needed.
 
-    Set category to all for every filter, or select a specific category.
+    Defaults to all filters; select a category only to narrow the response.
     Unrequested categories are empty. Pass names directly in the corresponding filter lists. Names are
     case-insensitive, such as types=["Exhibition"] or departments=["D-INFK"].
     """
 
     # Return accepted names rather than exposing the upstream identifiers.
-    types, locations = await _catalogs() if category in ("all", "types", "locations") else ([], [])
+    types, locations = await asyncio.gather(
+        _catalog("types", needed=category in ("all", "types")), _catalog("locations", needed=category in ("all", "locations"))
+    )
     return EventFilters(
         types=[option.label for option in types] if category in ("all", "types") else [],
         locations=[option.label for option in locations] if category in ("all", "locations") else [],
@@ -144,7 +153,7 @@ async def ethz_events(
         list[Literal["motor disabilities", "visual impairments", "hearing impairments", "sign language"]] | None,
         Field(max_length=4, description="Accessibility needs as readable names, not numeric codes."),
     ] = None,
-    limit: Annotated[int, Field(ge=1, le=20)] = 10,
+    limit: Annotated[int, Field(ge=1, le=20)] = 5,
     offset: Annotated[int, Field(ge=0)] = 0,
 ) -> EventResults:
     """Get ongoing and upcoming events from ETH Zurich's official event calendar.
@@ -156,7 +165,7 @@ async def ethz_events(
     Filters are applied upstream before pagination, using the same multi-select
     semantics as the UI.
     Dates select entries overlapping the inclusive date range, not individual
-    occurrences. Without dates, returns ongoing and upcoming events within 999 days.
+    occurrences. Without dates, returns ongoing and upcoming events within 30 days.
     Includes exhibitions and recurring events, in the calendar's original order.
     Some content is only available in German. Schedule dates and times are local
     to the event; recurring entries can also contain past dates. Respect opening
@@ -177,10 +186,12 @@ async def ethz_events(
             params["filters[0].starts-not-after"] = end_date.isoformat()
     else:
         params["filters[0].min-till-end"] = 0
-        params["filters[0].max-till-start"] = 999
+        params["filters[0].max-till-start"] = 30
 
     # Load the current labels only when type or location translation is needed.
-    type_options, location_options = await _catalogs() if types or locations else ([], [])
+    type_options, location_options = await asyncio.gather(
+        _catalog("types", needed=bool(types)), _catalog("locations", needed=bool(locations))
+    )
     filters = (
         ("departments", "org-units", departments, DEPARTMENTS),
         ("types", "e-types", types, {option.label: option.code for option in type_options}),

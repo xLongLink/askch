@@ -56,6 +56,7 @@ async def cantons(query: Annotated[str, Field(max_length=100)] = "") -> CantonRe
 
     Search is case- and accent-insensitive. Returns official language codes and
     administrative capitals (Herisau for Appenzell Ausserrhoden).
+    An exact canton code returns only that canton, before considering partial names.
     """
 
     # Normalize accents, punctuation, and case for reference lookups.
@@ -66,6 +67,8 @@ async def cantons(query: Annotated[str, Field(max_length=100)] = "") -> CantonRe
     items = []
     for code, name, capital, languages in DATA:
         canton = Canton.model_validate({"code": code, "name": name, "capital": capital, "languages": languages})
+        if query == code.casefold():
+            return CantonResults(items=[canton])
         normalized = unicodedata.normalize("NFKD", f"{code} {name} {capital} {canton.code.name}").casefold()
         searchable = "".join(character for character in normalized if character.isalnum())
         if query in searchable:
