@@ -5,8 +5,9 @@
 <img src="banner.png" alt="AskCH banner" />
 
 <h3 >
-Make Swiss data accessible through natural language.
+Made in Switerland · Hosted in Switerland · Use Only Swiss Models
 </h3 >
+
 
 [![Release](https://img.shields.io/github/v/release/xLongLink/askch)](https://github.com/xLongLink/askch/releases/latest)
 [![Release workflow](https://github.com/xLongLink/askch/actions/workflows/release.yaml/badge.svg)](https://github.com/xLongLink/askch/actions/workflows/release.yaml)

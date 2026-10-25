@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { z } from "zod/v4";
+import * as wavEncoder from "wav-encoder";
 import { useMicrophoneLevel } from "@/components/ballmac/voice-input";
 
 const transcriptSchema = z.string().trim().min(1).max(100000);
@@ -72,12 +73,23 @@ export function useDictation(onTranscript: (text: string) => void) {
                 if (controller.signal.aborted) return;
                 if (!audio.size) throw new Error("The recording is empty. Please try again.");
 
-                // Append only validated text to the draft; never send a chat message automatically.
+                // Convert browser recordings to the WAV format accepted by Apertus audio input.
                 setPhase("transcribing");
+                const decoder = new OfflineAudioContext(1, 1, 16000);
+                const decoded = await decoder.decodeAudioData(await audio.arrayBuffer());
+                const wav = await wavEncoder.encode({
+                    sampleRate: decoded.sampleRate,
+                    channelData: Array.from({ length: decoded.numberOfChannels }, (_, channel) =>
+                        decoded.getChannelData(channel).subarray(0, decoded.sampleRate * 60),
+                    ),
+                });
+                if (controller.signal.aborted) return;
+
+                // Append only validated text to the draft; never send a chat message automatically.
                 const response = await fetch("/api/dictation", {
                     method: "POST",
-                    headers: { "Content-Type": mimeType },
-                    body: audio,
+                    headers: { "Content-Type": "audio/wav" },
+                    body: wav,
                     signal: controller.signal,
                 });
                 if (!response.ok)
