@@ -82,6 +82,8 @@ def test_api_routes_with_frontend(client):
         "cantons",
         "cities",
         "ictjobs",
+        "ethz_events",
+        "ethz_event_filters",
     ]
 
 
