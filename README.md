@@ -35,15 +35,12 @@ Make Swiss data accessible through natural language.
 
 ### Develop the WebUI
 
-Requirements: [Node.js 24 LTS](https://nodejs.org/) (24.11 or newer) and npm 11.19 or newer. Vite+ is installed locally as a development dependency.
+Requirements: [Node.js 24 LTS](https://nodejs.org/). Vite+ is installed locally as a development dependency.
 
 ```
 cd web
 npm ci && npm run dev
 ```
-
-Use `npm install` when changing dependencies and commit `web/package-lock.json`. Run `npm run lint`, `npm run check`, and `npm run build` from `web/` to validate changes. Docker and CI install the locked dependencies with `npm ci`.
-
 
 ### Develop the API
 
@@ -54,7 +51,6 @@ cd api
 uv sync && uv run python main.py
 ```
 
-Docker bundles the built frontend in `web/` beside `main.py`, where FastAPI serves it automatically. Without that directory, run the Vite development server separately; no frontend-path environment setting is needed.
 
 ### GitHub releases
 

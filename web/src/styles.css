@@ -82,7 +82,7 @@
                 rgb(253 252 251 / var(--overlay-opacity)),
                 rgb(253 252 251 / var(--overlay-opacity))
             ),
-            url("/mountains.jpg");
+            url("/alpine.jpg");
     }
 
     .chat-page[data-has-messages="true"] {

@@ -7,37 +7,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, CircleAlert, Square } from "lucide-react";
 import { z } from "zod/v4";
 import { AssistantMessage } from "./Assistant";
+import { useDictation } from "./dictation";
+import { VoiceInput } from "@/components/ballmac/voice-input";
 
-const defaultGreeting = { languages: ["en"], lang: "en", text: "Hello! Welcome." };
 const samplesSchema = z.array(z.string().trim().min(1).max(2000)).length(4);
-const greetings = [
-    { languages: ["de", "gsw"], lang: "de-CH", text: "Grüezi! Willkommen." },
-    { languages: ["fr"], lang: "fr-CH", text: "Bonjour ! Bienvenue." },
-    { languages: ["it"], lang: "it-CH", text: "Ciao! Benvenuti." },
-    { languages: ["rm"], lang: "rm-CH", text: "Allegra! Bainvegni." },
-    defaultGreeting,
-];
 
 export function App() {
     // Fix the initial UI language for the lifetime of this conversation.
-    const [greeting] = useState(() => {
+    const [language] = useState(() => {
         const languages = navigator.languages.length ? navigator.languages : [navigator.language];
         return (
             languages
-                .map((locale) =>
-                    greetings.find((candidate) =>
-                        candidate.languages.includes(locale.toLowerCase().split("-")[0]),
-                    ),
-                )
-                .find((candidate) => candidate !== undefined) ?? defaultGreeting
+                .map((locale) => locale.toLowerCase().split("-")[0])
+                .map((language) => (language === "gsw" ? "de" : language))
+                .find((language) => ["de", "fr", "it", "rm", "en"].includes(language)) ?? "en"
         );
     });
     const transport = useMemo(
         () =>
             new DefaultChatTransport({
-                body: { context: { language: greeting.lang.split("-")[0] } },
+                body: { context: { language } },
             }),
-        [greeting],
+        [language],
     );
 
     // Keep the SDK conversation ID stable across turns and handle transient tool errors.
@@ -51,6 +42,9 @@ export function App() {
         },
     });
     const [input, setInput] = useState("");
+    const dictation = useDictation((text) => {
+        setInput((draft) => (draft.trim() ? `${draft.trimEnd()} ${text}` : text));
+    });
     const [samples, setSamples] = useState<string[]>([]);
     const messagesEnd = useRef<HTMLParagraphElement>(null);
     const busy = status === "submitted" || status === "streaming";
@@ -80,7 +74,7 @@ export function App() {
     }, [messages, status]);
 
     async function send() {
-        if (!input.trim() || busy) return;
+        if (!input.trim() || busy || dictation.active) return;
 
         // Clear the draft before starting the SDK request.
         const text = input.trim();
@@ -128,9 +122,9 @@ export function App() {
                                                 status === "streaming" &&
                                                 message.id === messages.at(-1)?.id
                                             }
-                                            busy={busy}
+                                            busy={busy || dictation.active}
                                             onSend={async (text) => {
-                                                if (busy) return;
+                                                if (busy || dictation.active) return;
                                                 clearError();
                                                 await sendMessage({ text });
                                             }}
@@ -158,8 +152,8 @@ export function App() {
                             <p className="mb-6 text-4xl" role="img" aria-label="Swiss flag">
                                 🇨🇭
                             </p>
-                            <h1 className="mb-8 font-medium tracking-tight" lang={greeting.lang}>
-                                {greeting.text}
+                            <h1 className="mb-8 font-medium tracking-tight">
+                                Grüezi! Bonjour! Ciao! Allegra!
                             </h1>
                         </header>
                     )}
@@ -189,47 +183,92 @@ export function App() {
                             await send();
                         }}
                     >
-                        <Textarea
-                            aria-label="Message"
-                            placeholder="Message…"
-                            value={input}
-                            onChange={(event) => setInput(event.target.value)}
-                            rows={1}
-                            className="max-h-40 min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
-                            onKeyDown={async (event) => {
-                                if (
-                                    event.key === "Enter" &&
-                                    !event.shiftKey &&
-                                    !event.nativeEvent.isComposing
-                                ) {
-                                    event.preventDefault();
-                                    await send();
-                                }
-                            }}
-                        />
-                        {busy ? (
-                            <Button
-                                type="button"
-                                aria-label="Stop response"
-                                title="Stop response"
-                                variant="secondary"
-                                size="icon-lg"
-                                onClick={stop}
-                            >
-                                <Square fill="currentColor" aria-hidden="true" />
-                            </Button>
-                        ) : (
-                            <Button
-                                type="submit"
-                                aria-label="Send message"
-                                title="Send message"
-                                size="icon-lg"
-                                disabled={!input.trim()}
-                            >
-                                <ArrowUp aria-hidden="true" />
-                            </Button>
+                        {!dictation.active && (
+                            <Textarea
+                                aria-label="Message"
+                                placeholder="Message…"
+                                value={input}
+                                onChange={(event) => setInput(event.target.value)}
+                                rows={1}
+                                className="max-h-40 min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
+                                onKeyDown={async (event) => {
+                                    if (
+                                        event.key === "Enter" &&
+                                        !event.shiftKey &&
+                                        !event.nativeEvent.isComposing
+                                    ) {
+                                        event.preventDefault();
+                                        await send();
+                                    }
+                                }}
+                            />
                         )}
+                        <VoiceInput
+                            variant={dictation.active ? "bar" : "button"}
+                            className={dictation.active ? "min-w-0 max-w-none flex-1" : "shrink-0"}
+                            state={
+                                dictation.phase === "recording"
+                                    ? "listening"
+                                    : dictation.active
+                                      ? "processing"
+                                      : "idle"
+                            }
+                            level={dictation.level}
+                            label="Dictate message"
+                            processingLabel={
+                                dictation.phase === "starting"
+                                    ? "Waiting for microphone access…"
+                                    : "Transcribing…"
+                            }
+                            title={
+                                dictation.supported
+                                    ? "Dictate message"
+                                    : "Dictation requires a supported browser and HTTPS or localhost"
+                            }
+                            disabled={busy || !dictation.supported}
+                            onStart={dictation.start}
+                            onStop={dictation.stop}
+                            onCancel={dictation.cancel}
+                        />
+                        {!dictation.active &&
+                            (busy ? (
+                                <Button
+                                    type="button"
+                                    aria-label="Stop response"
+                                    title="Stop response"
+                                    variant="secondary"
+                                    size="icon-lg"
+                                    onClick={stop}
+                                >
+                                    <Square fill="currentColor" aria-hidden="true" />
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="submit"
+                                    aria-label="Send message"
+                                    title="Send message"
+                                    size="icon-lg"
+                                    disabled={!input.trim() || dictation.active}
+                                >
+                                    <ArrowUp aria-hidden="true" />
+                                </Button>
+                            ))}
                     </form>
+                    {(dictation.error ||
+                        dictation.phase === "starting" ||
+                        dictation.phase === "transcribing") && (
+                        <p
+                            className="mt-2 text-sm text-muted-foreground"
+                            role={dictation.error ? "alert" : "status"}
+                        >
+                            {dictation.error ||
+                                (dictation.phase === "starting"
+                                    ? "Waiting for microphone access…"
+                                    : dictation.phase === "transcribing"
+                                      ? "Transcribing…"
+                                      : "")}
+                        </p>
+                    )}
                     {messages.length === 0 && samples.length > 0 && (
                         <section
                             className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
@@ -240,9 +279,9 @@ export function App() {
                                     variant="outline"
                                     key={sample}
                                     className="h-auto min-w-0 justify-start bg-background/80 px-4 py-3 text-left whitespace-normal wrap-anywhere"
-                                    disabled={busy}
+                                    disabled={busy || dictation.active}
                                     onClick={async () => {
-                                        if (busy) return;
+                                        if (busy || dictation.active) return;
                                         setInput("");
                                         clearError();
                                         await sendMessage({ text: sample });
