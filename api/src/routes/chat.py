@@ -3,6 +3,8 @@ from uuid import uuid4
 from typing import Annotated
 from fastapi import Depends, Request, APIRouter
 from src.mcp import context
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from contextlib import AsyncExitStack, aclosing
 from pydantic_ai import Agent, exceptions
 from src.settings import settings
@@ -13,6 +15,7 @@ from pydantic_ai.mcp import MCPToolset
 from src.models.chat import ChatRequest
 from src.utils.traces import ChatTrace
 from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic_ai.usage import UsageLimits
 from src.models.context import ChatContext
 from pydantic_ai.ui.vercel_ai import VercelAIAdapter, request_types, response_types
 from pydantic_ai.models.openai import OpenAIChatModel
@@ -20,7 +23,8 @@ from pydantic_ai.profiles.openai import OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 
 router = APIRouter()
-ERROR_MESSAGE = "Unable to get a response. Check your API key and model, then try again."
+ERROR_MESSAGE = "Unable to complete the answer. Please try again."
+LIMIT_MESSAGE = "This answer reached its search limit. Please narrow your question and try again."
 
 
 async def stream_resources() -> AsyncGenerator[AsyncExitStack]:
@@ -41,14 +45,21 @@ async def stream_response(
     trace: ChatTrace,
 ) -> AsyncGenerator[str]:
     """Encode agent events while sanitizing failures and closing cancelled runs."""
+    error_message = ERROR_MESSAGE
 
     async def events() -> AsyncGenerator[NativeEvent]:
+        nonlocal error_message
+
         # Replay the event fetched before the HTTP response starts.
-        if isinstance(first, Exception):
-            raise first
-        yield first
-        async for event in native:
-            yield event
+        try:
+            if isinstance(first, Exception):
+                raise first
+            yield first
+            async for event in native:
+                yield event
+        except exceptions.UsageLimitExceeded:
+            error_message = LIMIT_MESSAGE
+            raise
 
     # Close every generator so disconnects also cancel the agent's provider request.
     encoder = adapter.build_event_stream()
@@ -90,8 +101,8 @@ async def stream_response(
             trace.record("model output", chunk.delta)
         if isinstance(chunk, response_types.ErrorChunk):
             trace.status = "error"
-            trace.record("error", ERROR_MESSAGE)
-            yield encoder.encode_event(response_types.ErrorChunk(error_text=ERROR_MESSAGE))
+            trace.record("error", error_message)
+            yield encoder.encode_event(response_types.ErrorChunk(error_text=error_message))
             yield encoder.encode_event(response_types.DoneChunk())
             return
         yield encoder.encode_event(chunk)
@@ -124,7 +135,9 @@ async def chat(
         system_prompt=(
             f"{settings.SYSTEM_PROMPT}\n\nThe conversation language is {body.context.language}. Always reply in this language; "
             "do not switch languages based on user messages. Use this language for data lookups. "
-            "For Romansh, announcements use English sources; explain this limitation when using them."
+            "For Romansh, announcements use English sources; explain this limitation when using them.\n\n"
+            f"Today's date is {datetime.now(ZoneInfo('Europe/Zurich')).date().isoformat()} in Europe/Zurich. "
+            "Use this date to interpret relative dates such as today, tomorrow, and this weekend."
         ),
         toolsets=[MCPToolset(server, max_retries=2, process_tool_call=context.call_tool)],
         retries=0,
@@ -144,7 +157,7 @@ async def chat(
 
     # Start the provider request before committing to a successful streaming response.
     trace.record("thinking", "Waiting for the model response.")
-    native = adapter.run_stream_native(deps=body.context)
+    native = adapter.run_stream_native(deps=body.context, usage_limits=UsageLimits(request_limit=8, tool_calls_limit=8))
     if isinstance(native, AsyncGenerator):
         await resources.enter_async_context(aclosing(native))
     try:

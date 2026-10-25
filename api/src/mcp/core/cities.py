@@ -45,8 +45,8 @@ async def cities(
 
     Returns geographic names (including canton abbreviations where provided) and
     WGS84 coordinates. Municipalities have origin gg25; postcode areas have origin
-    zipcode. Different language variants may refer to the same feature ID within
-    an origin. Results are limited, not a complete list of Swiss municipalities.
+    zipcode. Language variants of the same feature within an origin are deduplicated,
+    preserving the first match. Results are limited, not a complete list of Swiss municipalities.
     This is a geographic lookup, not population data or a legal city classification.
     Cite the source and attribute geographic data to swisstopo.
     """
@@ -58,4 +58,11 @@ async def cities(
 
     # Restrict matches to municipalities and postcode areas, excluding street addresses.
     response = await website.fetch(SEARCH, params={"searchText": query, "type": "locations", "origins": "gg25,zipcode", "limit": limit})
-    return CityResults.model_validate(response.json())
+    result = CityResults.model_validate(response.json())
+
+    # Keep the first language variant without merging municipalities and postcode areas.
+    items = {}
+    for city in result.items:
+        items.setdefault((city.origin, city.id), city)
+    result.items = list(items.values())
+    return result

@@ -15,6 +15,31 @@ The project aims to make information about Switzerland more accessible by allowi
 - NEVER EVER EVER add any new comment in markdown files, only fix existing one.
 - NEVER create new markdown files unless indicated from the user.
 
+## Apertus Simplification Guidelines
+
+When reviewing or simplifying tasks for Apertus, prioritize short instructions, small tool schemas, and predictable workflows.
+
+- PREFER application code over model reasoning for arithmetic, filtering, date handling, and deterministic formatting.
+- DO remove contradictory or duplicated instructions.
+- DO give tools clear names, simple inputs, sensible defaults, and concise outputs.
+- DO avoid unnecessary tool calls and repeated data.
+- DO return clear errors and ask for clarification instead of guessing.
+- DO preserve validation, source attribution, permissions, and safety checks.
+- AVOID new abstractions, speculative features, and cosmetic refactoring.
+
+Review workflow:
+1. Inspect the code before recommending changes.
+2. Return five actionable findings, or fewer when the code does not support five. NEVER invent findings to fill the list.
+3. For each finding, include the exact file path and line range, the current problem and unnecessary work it creates, the smallest safe change, behavior or compatibility changes, and confidence (High, Medium, or Low).
+4. Wait for the user to select findings before editing, unless they have already authorized specific changes.
+
+After implementation:
+- DO run relevant existing tests, formatting, linting, type checking, and the build where applicable.
+- Unless the user explicitly requests tests, DON'T add them.
+- DO review the diff for further simplification.
+- DO summarize changes, verification results, and remaining limitations.
+- DON'T claim improved model quality unless it was evaluated with Apertus.
+
 ## Python Guidelines
 
 - AVOID renaming imports.
