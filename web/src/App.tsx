@@ -5,9 +5,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, CircleAlert, Square } from "lucide-react";
-import { AssistantMessage } from "./Assistant";
-import { useDictation } from "./dictation";
-import { VoiceInput } from "@/components/ballmac/voice-input";
+import { AssistantMessage } from "@/components/assistant";
+import { useDictation } from "@/lib/dictation";
+import { VoiceInput } from "@/components/ui/voice-input";
 
 export function App() {
     // Fix the initial UI language for the lifetime of this conversation.
@@ -62,8 +62,7 @@ export function App() {
 
     return (
         <section
-            className="chat-page flex h-dvh flex-col bg-cover bg-center"
-            data-has-messages={String(messages.length > 0)}
+            className={`relative isolate flex h-dvh flex-col bg-[url('/alpine.jpg')] bg-cover bg-center before:pointer-events-none before:absolute before:inset-0 before:-z-10 ${messages.length > 0 ? "before:bg-background/83" : "before:bg-background/60"}`}
         >
             <main
                 className={`flex min-h-0 flex-1 flex-col ${messages.length === 0 ? "justify-center" : "justify-start"}`}
@@ -71,7 +70,7 @@ export function App() {
                 {messages.length > 0 && (
                     <section className="flex-1 overflow-y-auto">
                         <section
-                            className="conversation mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-8 px-5 py-8"
+                            className="mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-8 px-5 py-8 text-[0.9375rem] leading-7"
                             role="log"
                             aria-label="Conversation"
                             aria-live="polite"
@@ -99,12 +98,6 @@ export function App() {
                                                 status === "streaming" &&
                                                 message.id === messages.at(-1)?.id
                                             }
-                                            busy={busy || dictation.active}
-                                            onSend={async (text) => {
-                                                if (busy || dictation.active) return;
-                                                clearError();
-                                                await sendMessage({ text });
-                                            }}
                                         />
                                     );
                                 }
@@ -125,8 +118,8 @@ export function App() {
 
                 <section className="mx-auto w-full max-w-3xl shrink-0 px-5 pt-3 pb-4">
                     {messages.length === 0 && (
-                        <header className="greeting text-center">
-                            <h1 className="mb-8 font-medium tracking-tight">
+                        <header className="text-center">
+                            <h1 className="mb-8 text-[clamp(1.875rem,5vw,2.25rem)] leading-[1.2] font-medium tracking-tight">
                                 Grüezi! Bonjour! Ciao! Allegra!
                             </h1>
                         </header>

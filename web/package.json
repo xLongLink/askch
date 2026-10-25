@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "generate:ui": "openui --no-telemetry generate src/openui.tsx --out ../api/src/openui.txt --no-interactive",
+        "generate:ui": "openui --no-telemetry generate src/lib/openui.tsx --out ../api/src/openui.txt --no-interactive",
         "predev": "npm run generate:ui",
         "prebuild": "npm run generate:ui",
         "dev": "vp dev",
