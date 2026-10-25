@@ -8,7 +8,7 @@ const root = document.getElementById("root");
 if (!root) throw new Error("The application root is missing.");
 
 createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+    <StrictMode>
+        <App />
+    </StrictMode>,
 );

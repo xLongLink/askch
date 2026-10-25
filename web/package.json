@@ -1,53 +1,53 @@
 {
-  "name": "web",
-  "version": "0.0.1",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "generate:ui": "openui --no-telemetry generate src/openui.tsx --out ../api/src/openui.txt --no-interactive",
-    "predev": "npm run generate:ui",
-    "prebuild": "npm run generate:ui",
-    "dev": "vp dev",
-    "build": "vp build",
-    "preview": "vp preview",
-    "format": "vp fmt",
-    "lint": "vp check",
-    "check": "tsc --noEmit",
-    "check:watch": "tsc --noEmit --watch"
-  },
-  "dependencies": {
-    "@ai-sdk/react": "^3.0.318",
-    "@openuidev/react-lang": "^1.0.1",
-    "ai": "^6.0.314",
-    "class-variance-authority": "^0.7.1",
-    "cn": "^0.5.0",
-    "lucide-react": "^1.61.0",
-    "marked": "^18.1.1",
-    "radix-ui": "^1.8.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-simple-maps": "^5.0.5",
-    "recharts": "^3.10.1",
-    "sanitize-html": "^2.18.1",
-    "zod": "^4.6.7"
-  },
-  "devDependencies": {
-    "@openuidev/cli": "^0.6.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
-    "@types/sanitize-html": "^2.16.2",
-    "@vitejs/plugin-react": "^5.2.0",
-    "tailwindcss": "^4.3.3",
-    "typescript": "^7.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
-    "vite-plus": "1.3.0"
-  },
-  "overrides": {
-    "vite": "$vite"
-  },
-  "engines": {
-    "node": ">=26.0.0 <27",
-    "npm": ">=11.19.0"
-  }
+    "name": "web",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "generate:ui": "openui --no-telemetry generate src/openui.tsx --out ../api/src/openui.txt --no-interactive",
+        "predev": "npm run generate:ui",
+        "prebuild": "npm run generate:ui",
+        "dev": "vp dev",
+        "build": "vp build",
+        "preview": "vp preview",
+        "format": "vp fmt",
+        "lint": "vp check",
+        "check": "tsc --noEmit",
+        "check:watch": "tsc --noEmit --watch"
+    },
+    "dependencies": {
+        "@ai-sdk/react": "^3.0.318",
+        "@openuidev/react-lang": "^1.0.1",
+        "ai": "^6.0.314",
+        "class-variance-authority": "^0.7.1",
+        "cn": "^0.5.0",
+        "lucide-react": "^1.61.0",
+        "marked": "^18.1.1",
+        "radix-ui": "^1.8.1",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "react-simple-maps": "^5.0.5",
+        "recharts": "^3.10.1",
+        "sanitize-html": "^2.18.1",
+        "zod": "^4.6.7"
+    },
+    "devDependencies": {
+        "@openuidev/cli": "^0.6.0",
+        "@tailwindcss/vite": "^4.3.3",
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@types/sanitize-html": "^2.16.2",
+        "@vitejs/plugin-react": "^5.2.0",
+        "tailwindcss": "^4.3.3",
+        "typescript": "^7.0.2",
+        "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+        "vite-plus": "1.3.0"
+    },
+    "overrides": {
+        "vite": "$vite"
+    },
+    "engines": {
+        "node": ">=26.0.0 <27",
+        "npm": ">=11.19.0"
+    }
 }
