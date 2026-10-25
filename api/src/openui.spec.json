@@ -2,11 +2,11 @@
   "root": "Stack",
   "components": {
     "Stack": {
-      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Card | Grid)[])",
+      "signature": "Stack(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice | Card | Grid)[])",
       "description": "The root vertical layout, containing at most 24 basic components, cards, or grids. Do not nest stacks."
     },
     "Card": {
-      "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart | Map)[])",
+      "signature": "Card(children: (Text | Heading | Link | FollowUp | Chart | Map | Invoice)[])",
       "description": "A card for a discrete item, containing at most 24 basic components. Do not nest cards or stacks."
     },
     "Grid": {
@@ -36,6 +36,10 @@
     "Map": {
       "signature": "Map(title: string, unit: string, cantons: {code: \"AG\" | \"AI\" | \"AR\" | \"BE\" | \"BL\" | \"BS\" | \"FR\" | \"GE\" | \"GL\" | \"GR\" | \"JU\" | \"LU\" | \"NE\" | \"NW\" | \"OW\" | \"SG\" | \"SH\" | \"SO\" | \"SZ\" | \"TG\" | \"TI\" | \"UR\" | \"VD\" | \"VS\" | \"ZG\" | \"ZH\", label: string, value?: number}[], markers: {label: string, longitude: number, latitude: number}[])",
       "description": "A Swiss canton map with optional numeric canton shading and labeled location markers. Supply up to 26 unique two-letter canton codes and 20 markers. Coordinates are WGS84 longitude/latitude within Switzerland's bounding box. Use null for missing canton values; pass empty arrays for unused layers. Boundaries are generalized historical outlines, not current administrative or navigation data."
+    },
+    "Invoice": {
+      "signature": "Invoice(title: string, amount: number, currency: \"CHF\" | \"EUR\", creditor: {name: string, address: string, buildingNumber: string, zip: string, city: string, country: string, account: string}, debtor: {name: string, address: string, buildingNumber: string, zip: string, city: string, country: string}, reference: string, message: string, language: \"DE\" | \"EN\" | \"FR\" | \"IT\" | \"RM\")",
+      "description": "A Swiss QR invoice with payment-slip preview and a user-triggered PDF download. Use only billing details supplied or confirmed by the user. Requires title, amount, CHF/EUR, creditor with CH/LI IBAN, debtor, reference (empty if unused), message (empty if unused), and DE/EN/FR/IT/RM language. Addresses are structured: name, street address, buildingNumber (empty if absent), zip, city, two-letter country. Invalid IBANs and incompatible references are rejected. Does not send an invoice or execute a payment."
     }
   },
   "schema": {
@@ -68,6 +72,9 @@
       },
       "Map": {
         "$ref": "#/$defs/Map"
+      },
+      "Invoice": {
+        "$ref": "#/$defs/Invoice"
       }
     },
     "required": [
@@ -79,7 +86,8 @@
       "Link",
       "FollowUp",
       "Chart",
-      "Map"
+      "Map",
+      "Invoice"
     ],
     "additionalProperties": false,
     "$defs": {
@@ -108,6 +116,9 @@
                 },
                 {
                   "$ref": "#/$defs/Map"
+                },
+                {
+                  "$ref": "#/$defs/Invoice"
                 },
                 {
                   "$ref": "#/$defs/Card"
@@ -431,6 +442,149 @@
         "additionalProperties": false,
         "description": "A Swiss canton map with optional numeric canton shading and labeled location markers. Supply up to 26 unique two-letter canton codes and 20 markers. Coordinates are WGS84 longitude/latitude within Switzerland's bounding box. Use null for missing canton values; pass empty arrays for unused layers. Boundaries are generalized historical outlines, not current administrative or navigation data."
       },
+      "Invoice": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 999999999.99,
+            "multipleOf": 0.01
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "CHF",
+              "EUR"
+            ]
+          },
+          "creditor": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 70
+              },
+              "address": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 70
+              },
+              "buildingNumber": {
+                "type": "string",
+                "maxLength": 16
+              },
+              "zip": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16
+              },
+              "city": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 35
+              },
+              "country": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              "account": {
+                "type": "string",
+                "minLength": 21,
+                "maxLength": 34
+              }
+            },
+            "required": [
+              "name",
+              "address",
+              "buildingNumber",
+              "zip",
+              "city",
+              "country",
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "debtor": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 70
+              },
+              "address": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 70
+              },
+              "buildingNumber": {
+                "type": "string",
+                "maxLength": 16
+              },
+              "zip": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16
+              },
+              "city": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 35
+              },
+              "country": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              }
+            },
+            "required": [
+              "name",
+              "address",
+              "buildingNumber",
+              "zip",
+              "city",
+              "country"
+            ],
+            "additionalProperties": false
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 35
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 140
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "DE",
+              "EN",
+              "FR",
+              "IT",
+              "RM"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "amount",
+          "currency",
+          "creditor",
+          "debtor",
+          "reference",
+          "message",
+          "language"
+        ],
+        "additionalProperties": false,
+        "description": "A Swiss QR invoice with payment-slip preview and a user-triggered PDF download. Use only billing details supplied or confirmed by the user. Requires title, amount, CHF/EUR, creditor with CH/LI IBAN, debtor, reference (empty if unused), message (empty if unused), and DE/EN/FR/IT/RM language. Addresses are structured: name, street address, buildingNumber (empty if absent), zip, city, two-letter country. Invalid IBANs and incompatible references are rejected. Does not send an invoice or execute a payment."
+      },
       "Card": {
         "type": "object",
         "properties": {
@@ -456,6 +610,9 @@
                 },
                 {
                   "$ref": "#/$defs/Map"
+                },
+                {
+                  "$ref": "#/$defs/Invoice"
                 }
               ]
             }
