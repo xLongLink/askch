@@ -2,6 +2,7 @@ import anyio
 from uuid import uuid4
 from typing import Annotated
 from fastapi import Depends, Request, APIRouter
+from src.mcp import context
 from contextlib import AsyncExitStack, aclosing
 from pydantic_ai import Agent, exceptions
 from src.settings import settings
@@ -12,6 +13,7 @@ from pydantic_ai.mcp import MCPToolset
 from src.models.chat import ChatRequest
 from src.utils.traces import ChatTrace
 from fastapi.responses import JSONResponse, StreamingResponse
+from src.models.context import ChatContext
 from pydantic_ai.ui.vercel_ai import VercelAIAdapter, request_types, response_types
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.profiles.openai import OpenAIModelProfile
@@ -32,7 +34,7 @@ async def stream_resources() -> AsyncGenerator[AsyncExitStack]:
 
 
 async def stream_response(
-    adapter: VercelAIAdapter[None, str],
+    adapter: VercelAIAdapter[ChatContext, str],
     native: AsyncIterator[NativeEvent],
     first: NativeEvent | Exception,
     resources: AsyncExitStack,
@@ -124,8 +126,13 @@ async def chat(
     )
     agent = Agent(
         model,
-        system_prompt=settings.SYSTEM_PROMPT,
-        toolsets=[MCPToolset(server, max_retries=2)],
+        deps_type=ChatContext,
+        system_prompt=(
+            f"{settings.SYSTEM_PROMPT}\n\nThe conversation language is {body.context.language}. Always reply in this language; "
+            "do not switch languages based on user messages. Use this language for data lookups. "
+            "For Romansh, announcements use English sources; explain this limitation when using them."
+        ),
+        toolsets=[MCPToolset(server, max_retries=2, process_tool_call=context.call_tool)],
         retries=0,
         model_settings={"max_tokens": 4096, "max_retries": 0, "timeout": client.timeout},
     )
@@ -143,7 +150,7 @@ async def chat(
 
     # Start the provider request before committing to a successful streaming response.
     trace.record("thinking", "Waiting for the model response.")
-    native = adapter.run_stream_native()
+    native = adapter.run_stream_native(deps=body.context)
     if isinstance(native, AsyncGenerator):
         await resources.enter_async_context(aclosing(native))
     try:

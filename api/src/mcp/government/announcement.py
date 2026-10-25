@@ -1,4 +1,5 @@
-from typing import Literal, Annotated
+from typing import Annotated
+from src.mcp import context
 from datetime import UTC, date, time, datetime, timedelta
 from pydantic import Field
 from src.utils import website
@@ -7,7 +8,6 @@ from mcp.server.mcpserver.exceptions import ToolError
 
 
 async def government_announcements(
-    language: Literal["de", "fr", "it", "en"] = "de",
     start_date: Annotated[date | None, Field(description="First publication date (inclusive), YYYY-MM-DD.")] = None,
     end_date: Annotated[date | None, Field(description="Last publication date (inclusive), YYYY-MM-DD. Defaults to today in UTC.")] = None,
     limit: Annotated[int, Field(ge=1, le=20)] = 5,
@@ -18,7 +18,8 @@ async def government_announcements(
     Defaults to the last 30 days, newest first. Use offset to fetch more results.
     Returns original full text as HTML paragraphs, publication dates, publisher IDs,
     and official source links. Cite those links and distinguish quotations from summaries.
-    Only announcements published in the requested language are returned; an empty page
+    Uses the conversation language automatically, with English sources for Romansh.
+    Only announcements published in that source language are returned; an empty page
     does not imply there are no announcements in other languages. Does not cover cantonal
     or municipal announcements.
     """
@@ -28,8 +29,13 @@ async def government_announcements(
     start_date = start_date or end_date - timedelta(days=min(29, (end_date - date.min).days))
     if start_date > end_date:
         raise ToolError("The start date must not be after the end date.")
-    if language not in {"de", "fr", "it", "en"} or not 1 <= limit <= 20 or offset < 0:
-        raise ToolError("Choose de, fr, it, or en, a limit between 1 and 20, and a nonnegative offset.")
+    if not 1 <= limit <= 20 or offset < 0:
+        raise ToolError("Choose a limit between 1 and 20 and a nonnegative offset.")
+
+    # News Service Bund does not publish a Romansh feed.
+    language = context.current.get().language
+    if language == "rm":
+        language = "en"
 
     # Fetch press releases only, without accepting arbitrary upstream URLs.
     params = {
