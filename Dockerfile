@@ -8,7 +8,7 @@ COPY web/ ./
 ARG VITE_APP_VERSION
 RUN npm run check && npm run build
 
-FROM python:3.12-slim-bookworm AS api-build
+FROM python:3.15-slim-bookworm AS api-build
 COPY --from=ghcr.io/astral-sh/uv:0.9.5 /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 WORKDIR /app
@@ -18,7 +18,7 @@ COPY api/src ./src
 COPY --from=web-build /app/api/src/openui.txt /app/api/src/openui.spec.json ./src/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-editable
 
-FROM python:3.12-slim-bookworm AS app
+FROM python:3.15-slim-bookworm AS app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 RUN useradd --uid 10001 --no-create-home app
