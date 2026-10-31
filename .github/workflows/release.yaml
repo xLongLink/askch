@@ -68,7 +68,7 @@ jobs:
           mv swiss.tar.gz release/
           cd release
           sha256sum swiss.tar.gz > SHA256SUMS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: swiss
           path: ${{ runner.temp }}/release/
