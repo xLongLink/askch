@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "@ai-sdk/react": "^3.0.318",
-        "@openuidev/react-lang": "^1.0.1",
+        "@openuidev/react-lang": "^1.0.2",
         "ai": "^6.0.314",
         "class-variance-authority": "^0.7.1",
         "cn": "^0.5.0",
